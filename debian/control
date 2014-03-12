@@ -10,5 +10,5 @@ Homepage: <insert the upstream URL, if relevant>
 
 Package: bleno
 Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends} , nodejs, libbluetooth
+Depends: ${shlibs:Depends}, ${misc:Depends} , nodejs, libbluetooth3
 Description: Truefitness version of bleno Bluetooth Low Energy Peripherals

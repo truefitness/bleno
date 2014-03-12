@@ -487,7 +487,8 @@ L2capBle.prototype.handleFindByTypeRequest = function(request) {
     var lengthPerHandle = 4;
     var numHandles = handles.length;
     var maxHandles = Math.floor((this._mtu - 1) / lengthPerHandle);
-
+    
+    maxHandles=1; // Ipod compatibility.
     numHandles = Math.min(numHandles, maxHandles);
 
     response = new Buffer(1 + numHandles * lengthPerHandle);
@@ -546,6 +547,7 @@ L2capBle.prototype.handleReadByGroupRequest = function(request) {
 
       var lengthPerService = (uuidSize === 2) ? 6 : 20;
       var maxServices = Math.floor((this._mtu - 2) / lengthPerService);
+      maxServices=1;  // Ipod compatibility.
       numServices = Math.min(numServices, maxServices);
 
       response = new Buffer(2 + numServices * lengthPerService);
@@ -612,7 +614,7 @@ L2capBle.prototype.handleReadByTypeRequest = function(request) {
       }
 
       var lengthPerCharacteristic = (uuidSize === 2) ? 7 : 21;
-      var maxCharacteristics = Math.floor((this._mtu - 2) / lengthPerCharacteristic);
+      var maxCharacteristics = 1  // Ipod compatibility.
       numCharacteristics = Math.min(numCharacteristics, maxCharacteristics);
 
       response = new Buffer(2 + numCharacteristics * lengthPerCharacteristic);

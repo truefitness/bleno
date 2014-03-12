@@ -1,2 +1,0 @@
-shlibs:Depends=libbluetooth3 (>= 4.91), libc6 (>= 2.7)
-misc:Depends=

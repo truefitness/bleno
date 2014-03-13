@@ -7,6 +7,21 @@ This repository has been "debianized" to enable the building of i386 ubuntu (pre
 
 The original release was cloned from:  https://github.com/sandeepmistry/bleno
 
+Build
+====
+
+To build the debian package you will need the pristine-tar tools installed,
+
+```
+sudo apt-get install pristine-tar
+```
+
+then:
+```
+git-buildpackage --git-pristine-tar
+```
+
+
 
 bleno
 =====
@@ -15,7 +30,6 @@ A node.js module for implementing BLE (Bluetooth low energy) peripherals.
 
 Need a BLE central module? See [noble](https://github.com/sandeepmistry/noble).
 
-__Note:__ Mac OS X and Linux are currently the only supported OSes, and are still under development. Other platforms will be developed later on (see Roadmap below).
 
 Prerequisites
 ------------
@@ -25,14 +39,7 @@ __Linux (Ubuntu)__
  * ```sudo apt-get install libbluetooth-dev```
  * Run as ```sudo``` or ```root```
 
-__OS X__
 
- * 10.9 or later
-
-Install
--------
-
-    npm install bleno
 
 Usage
 -----

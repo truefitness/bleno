@@ -8,7 +8,7 @@ LIBS=bluetooth
 
 PREFIX=/usr/local/bin
 DESTDIR=
-TOPDIR=$(DESTDIR)$(PREFIX)/truetouch/qml/Bluetooth/$(APPNAME)
+TOPDIR=$(DESTDIR)$(PREFIX)/truetouch/qml/BlueTooth/$(APPNAME)
 BINDIR=$(TOPDIR)/build/Release
 TMPDIR=debian/tmp
 

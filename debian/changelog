@@ -1,6 +1,6 @@
-bleno (0.1.3+f973550e31-1true1ubuntu1~1.gbp125a1c) UNRELEASED; urgency=low
+bleno (0.1.3+f973550e31-1true1ubuntu1~1.gbpdfca2d) UNRELEASED; urgency=low
 
-  ** SNAPSHOT build @125a1c99b9147ff10924c54ad632e3f4ee987b70 **
+  ** SNAPSHOT build @dfca2d500136bd666b36f16126b956e458991f4e **
 
   [ djibi2 ]
   * Create README.md
@@ -13,8 +13,9 @@ bleno (0.1.3+f973550e31-1true1ubuntu1~1.gbp125a1c) UNRELEASED; urgency=low
 
   [ Robert Hedges ]
   * Renamed install directory to maintain compatibility with truetouch app.
+  * Added "Replace" line to control file to allow overwriting of files that used to be supplied by truetouch.
 
- -- Robert Hedges <rhedges@truefitness.com>  Fri, 04 Apr 2014 17:40:27 -0500
+ -- Robert Hedges <rhedges@truefitness.com>  Fri, 04 Apr 2014 17:43:25 -0500
 
 bleno (0.1.3+f973550e31-1true1) precise; urgency=low
 

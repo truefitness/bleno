@@ -22,6 +22,8 @@ show:
 	@echo $(VERSION) $(APPDIR)
 clean:
 	rm -rf $(TMPDIR)
+	rm ../${APPNAME}_*
+
 dist-clean: clean
 	rm -rf $(APPDIR)
 	rm -f $(TARNAME)
@@ -39,7 +41,8 @@ install: all
 	mkdir -p $(BINDIR)
 	cp -r ./bleno/* $(TOPDIR)
 	cp $(TMPDIR)/* $(BINDIR)
-
+	chmod u+s $(BINDIR)/hci-ble
+	chmod u+s $(BINDIR)/l2cap-ble
 tarball:
 	@echo copying sourcetree
 	@echo version $(VERSION)

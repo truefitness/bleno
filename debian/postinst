@@ -1,0 +1,12 @@
+#!/bin/sh
+APPNAME=bleno
+PREFIX=/usr/local/bin
+TOPDIR="$PREFIX"/truetouch/qml/BlueTooth/"$APPNAME"
+BINDIR="$TOPDIR"/build/Release
+TMPDIR=debian/tmp
+
+echo "chmod u+s "$BINDIR"/hci-ble"
+chmod u+s "$BINDIR"/hci-ble
+
+echo "chmod u+s "$BINDIR"/l2cap-ble"
+chmod u+s "$BINDIR"/l2cap-ble

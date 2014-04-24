@@ -20,6 +20,7 @@ then:
 ```
 git-buildpackage --git-pristine-tar
 ```
+Package building may become obsolet if jenkins-debian-glue is acceptable.
 
 
 

@@ -1,3 +1,10 @@
+bleno (0.1.5-1) UNRELEASED; urgency=low
+
+  * Path to support advertising single UUID with no dashes.
+  * Imported Upstream version 0.1.5
+
+ -- Robert Hedges <rhedges@truefitness.com>  Wed, 09 Jul 2014 15:40:26 -0500
+
 bleno (0.1.3+f973550e31-1true3) clever-testing; urgency=low
 
   * Commit to test out jenkins build.

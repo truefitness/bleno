@@ -4,6 +4,8 @@ var events = require('events');
 var os = require('os');
 var util = require('util');
 
+var UuidUtil = require('./uuid-util');
+
 var PrimaryService = require('./primary-service');
 var Characteristic = require('./characteristic');
 var Descriptor = require('./descriptor');
@@ -32,7 +34,7 @@ function Bleno() {
   this._bindings.on('servicesSet', this.onServicesSet.bind(this));
   this._bindings.on('accept', this.onAccept.bind(this));
   this._bindings.on('disconnect', this.onDisconnect.bind(this));
-  
+
   this._bindings.on('rssiUpdate', this.onRssiUpdate.bind(this));
 }
 
@@ -50,25 +52,35 @@ Bleno.prototype.onStateChange = function(state) {
   this.emit('stateChange', state);
 };
 
-Bleno.prototype.onAccept = function() {
-  debug('accept');
-  this.emit('accept');
+Bleno.prototype.onAccept = function(clientAddress) {
+  debug('accept ' + clientAddress);
+  this.emit('accept', clientAddress);
 };
 
-Bleno.prototype.onDisconnect = function() {
-  debug('disconnect');
-  this.emit('disconnect');
+Bleno.prototype.onDisconnect = function(clientAddress) {
+  debug('disconnect' + clientAddress);
+  this.emit('disconnect', clientAddress);
 };
 
 Bleno.prototype.startAdvertising = function(name, serviceUuids, callback) {
   if (callback) {
     this.once('advertisingStart', callback);
   }
-  this._bindings.startAdvertising(name, serviceUuids);
+
+  var undashedServiceUuids = [];
+
+  if (serviceUuids && serviceUuids.length) {
+    for (var i = 0; i < serviceUuids.length; i++) {
+      undashedServiceUuids[i] = UuidUtil.removeDashes(serviceUuids[i]);
+    }
+  }
+
+  this._bindings.startAdvertising(name, undashedServiceUuids);
 };
 
 Bleno.prototype.startAdvertisingIBeacon = function(uuid, major, minor, measuredPower, callback) {
-  var uuidData = new Buffer(uuid, 'hex');
+  var undashedUuid =  UuidUtil.removeDashes(uuid);
+  var uuidData = new Buffer(undashedUuid, 'hex');
   var uuidDataLength = uuidData.length;
   var iBeaconData = new Buffer(uuidData.length + 5);
 
@@ -139,7 +151,7 @@ if (platform === 'linux') {
     debug('disconnect');
     this._bindings.disconnect();
   };
-  
+
   Bleno.prototype.updateRssi = function(callback) {
     if (callback) {
       this.once('rssiUpdate', function(rssi) {

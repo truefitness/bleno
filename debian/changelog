@@ -1,4 +1,4 @@
-bleno (0.1.5-1) UNRELEASED; urgency=low
+bleno (0.1.5-1true1) clever-testing; urgency=low
 
   * Path to support advertising single UUID with no dashes.
   * Imported Upstream version 0.1.5

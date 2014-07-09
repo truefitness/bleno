@@ -12,9 +12,5 @@ logs
 results
 
 npm-debug.log
+node_modules
 build
-debian/bleno
-debian/tmp
-*.log
-*.substvars
-debian/files

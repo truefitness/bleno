@@ -1,10 +1,10 @@
 Source: bleno
-Section: unknown
+Section: main
 Priority: extra
 Maintainer: Robert Hedges <rhedges@truefitness.com>
 Build-Depends: debhelper (>= 8.0.0), libbluetooth-dev
 Standards-Version: 3.9.2
-Homepage: <insert the upstream URL, if relevant>
+Homepage:  https://github.com/sandeepmistry/bleno 
 #Vcs-Git: git://git.debian.org/collab-maint/bleno.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/bleno.git;a=summary
 

@@ -1,3 +1,15 @@
+bleno (0.1.3+f973550e31-1true3) clever-testing; urgency=low
+
+  * Commit to test out jenkins build.
+  * Fixed typo and test again.
+  * Added rule to use quilt patches.  Added patch to only advertise one UUID.
+  * Add git-buildpackage configuration and ignore quilt .pc directory.
+  * Build
+  * Corrected rule for git-pristine-tar
+  * preparing for release
+
+ -- Robert Hedges <rhedges@truefitness.com>  Wed, 09 Jul 2014 15:11:23 -0500
+
 bleno (0.1.3+f973550e31-1true2) precise; urgency=low
 
   [ djibi2 ]

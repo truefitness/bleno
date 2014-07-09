@@ -1,0 +1,23 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Wed, 9 Jul 2014 13:41:55 -0500
+Subject: Only advertise one UUID
+
+---
+ bleno/trueTemplates/advertiseWorkoutTEMPLATE.js |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js b/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
+index 9569e32..2df8992 100644
+--- a/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
++++ b/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
+@@ -21,8 +21,7 @@ console.log('main');
+ bleno.on('stateChange', function(state) {
+   console.log('on -> stateChange: ' + state);
+   if (state === 'poweredOn') {
+-// REPLACE ShortName bleno.startAdvertising('Workout 48:55', ['9dc17002-8855-11e3-979a-78acc0b87777',
+-                                                             '9dc17003-8855-11e3-979a-78acc0b87777']);
++// REPLACE ShortName bleno.startAdvertising('Workout 48:55', ['9dc17002-8855-11e3-979a-78acc0b87777']);
+ 
+   } else {
+     bleno.stopAdvertising();
+-- 

@@ -18,3 +18,4 @@ debian/tmp
 *.log
 *.substvars
 debian/files
+.pc

@@ -1,0 +1,158 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Fri, 8 Aug 2014 18:34:42 -0500
+Subject: Modifications used to pass PTD Device Information tests.
+
+---
+ bleno/trueScripts/advertiseWorkout.DIS.js          |   47 ++++++++++++++++++++
+ bleno/trueScripts/blenoDeviceInformationService.js |    9 ++--
+ .../blenoHardwareRevisionCharacteristic.js         |    5 ++-
+ .../trueScripts/blenoSerialNumberCharacteristic.js |    5 +--
+ bleno/trueTemplates/advertiseWorkoutTEMPLATE.js    |    8 ++--
+ 5 files changed, 60 insertions(+), 14 deletions(-)
+ create mode 100644 bleno/trueScripts/advertiseWorkout.DIS.js
+
+diff --git a/bleno/trueScripts/advertiseWorkout.DIS.js b/bleno/trueScripts/advertiseWorkout.DIS.js
+new file mode 100644
+index 0000000..8c35617
+--- /dev/null
++++ b/bleno/trueScripts/advertiseWorkout.DIS.js
+@@ -0,0 +1,47 @@
++var util = require('util');
++var bleno = require('../index');
++
++var BlenoPrimaryService = bleno.PrimaryService;
++var BlenoCharacteristic = bleno.Characteristic;
++var BlenoDescriptor = bleno.Descriptor;
++var hardware= {serialNumber:"1234", type:"treadmill"};
++var DeviceInformationService = require('./blenoDeviceInformationService');
++var deviceInformationService = new DeviceInformationService(hardware.serialNumber);
++//var deviceInformationService = new DeviceInformationService();
++
++var WorkoutStatsService =require('./blenoWorkoutStatsService.js')
++var workoutStatsService = new WorkoutStatsService();
++
++var UserService =require('./blenoUserService.js')
++var userService = new UserService();
++
++
++console.log('main');
++
++
++bleno.on('stateChange', function(state) {
++  console.log('on -> stateChange: ' + state);
++  if (state === 'poweredOn') {
++    bleno.startAdvertising('Workout 48:55', [ '9dc17003-8855-11e3-979a-78acc0b87777']);
++
++  } else {
++    bleno.stopAdvertising();
++  }
++});
++
++bleno.on('advertisingStart', function(error) {
++  console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'));
++
++  if (!error) {
++
++      bleno.setServices([deviceInformationService,workoutStatsService,userService]);
++  }
++});
++
++bleno.on('advertisingStop', function() {
++  console.log('on -> advertisingStop');
++});
++
++bleno.on('servicesSet', function() {
++  console.log('on -> servicesSet');
++});
+diff --git a/bleno/trueScripts/blenoDeviceInformationService.js b/bleno/trueScripts/blenoDeviceInformationService.js
+index 8ba2c5f..8f12439 100644
+--- a/bleno/trueScripts/blenoDeviceInformationService.js
++++ b/bleno/trueScripts/blenoDeviceInformationService.js
+@@ -1,14 +1,11 @@
+ var util = require('util');
++var bleno = require('../index');
+ 
+-var bleno = require('../..');
+ var BlenoPrimaryService = bleno.PrimaryService;
+-
+-var SerialNumberCharacteristic = require('./blenoSerialNumberCharacteristic');
+-var HardwareRevisionCharacteristic = require('./blenoHardwareRevisionCharacteristic');
+-
+ var BlenoCharacteristic = bleno.Characteristic;
+ var BlenoDescriptor = bleno.Descriptor;
+-
++var SerialNumberCharacteristic = require('./blenoSerialNumberCharacteristic');
++var HardwareRevisionCharacteristic = require('./blenoHardwareRevisionCharacteristic');
+ 
+ 
+ 
+diff --git a/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js b/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
+index 9c84db0..c81518c 100644
+--- a/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
++++ b/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
+@@ -1,6 +1,7 @@
+ var util = require('util');
++var bleno = require('../index');
+ 
+-var bleno = require('../..');
++var BlenoPrimaryService = bleno.PrimaryService;
+ var BlenoCharacteristic = bleno.Characteristic;
+ var BlenoDescriptor = bleno.Descriptor;
+ 
+@@ -8,7 +9,7 @@ function HardwareRevisionCharacteristic(hardware) {
+   HardwareRevisionCharacteristic.super_.call(this, {
+     uuid: '2a27',
+     properties: ['read'],
+-    value: new Buffer(hardware.revisionNumber),
++    value: new Buffer("1a"),
+     descriptors: [
+       new BlenoDescriptor({
+         uuid: '2901',
+diff --git a/bleno/trueScripts/blenoSerialNumberCharacteristic.js b/bleno/trueScripts/blenoSerialNumberCharacteristic.js
+index 5aedeee..0065eab 100644
+--- a/bleno/trueScripts/blenoSerialNumberCharacteristic.js
++++ b/bleno/trueScripts/blenoSerialNumberCharacteristic.js
+@@ -1,6 +1,5 @@
+ var util = require('util');
+-
+-var bleno = require('../..');
++var bleno = require('../index');
+ 
+ var BlenoCharacteristic = bleno.Characteristic;
+ var BlenoDescriptor = bleno.Descriptor;
+@@ -9,7 +8,7 @@ function SerialNumberCharacteristic(hardware) {
+   SerialNumberCharacteristic.super_.call(this, {
+     uuid: '2a25',
+     properties: ['read'],
+-    value: new Buffer(hardware.serialNumber),
++    value: new Buffer("O1234"),
+     descriptors: [
+       new BlenoDescriptor({
+         uuid: '2901',
+diff --git a/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js b/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
+index 2df8992..3290145 100644
+--- a/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
++++ b/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
+@@ -5,8 +5,10 @@ var BlenoPrimaryService = bleno.PrimaryService;
+ var BlenoCharacteristic = bleno.Characteristic;
+ var BlenoDescriptor = bleno.Descriptor;
+ 
+-//var DeviceInformationService = require('./blenoDeviceInformationService');
+-//var deviceInformationService = new DeviceInformationService(treadmill);
++var hardware= {serialNumber:"1234", type:"treadmill"};
++var DeviceInformationService = require('./blenoDeviceInformationService');
++var deviceInformationService = new DeviceInformationService(hardware.serialNumber);
++//var deviceInformationService = new DeviceInformationService();
+ 
+ var WorkoutStatsService =require('./blenoWorkoutStatsService.js')
+ var workoutStatsService = new WorkoutStatsService();
+@@ -33,7 +35,7 @@ bleno.on('advertisingStart', function(error) {
+ 
+   if (!error) {
+ 
+-      bleno.setServices([workoutStatsService,userService]);
++      bleno.setServices([deviceInformationService,workoutStatsService,userService]);
+   }
+ });
+ 
+-- 

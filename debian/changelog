@@ -1,3 +1,15 @@
+bleno (0.1.5-1true2) clever-testing; urgency=low
+
+  [ Robert Hedges ]
+  * Path to support advertising single UUID with no dashes.
+  * Updated control file to provide the correct section and upstream URL
+  * Activate Device Information Service.
+  * Imported Upstream version 0.1.5
+
+  [ Robert ]
+
+ -- Robert <rhedges@veracityBuild2>  Tue, 12 Aug 2014 16:27:44 -0500
+
 bleno (0.1.3+f973550e31-1true3) clever-testing; urgency=low
 
   * Commit to test out jenkins build.

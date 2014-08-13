@@ -1,0 +1,45 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Wed, 13 Aug 2014 16:25:33 -0500
+Subject: Add app software version to DIS.
+
+---
+ .../blenoDeviceInformationServiceTEMPLATE.js       |   18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+index 86450d4..c8563f2 100644
+--- a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
++++ b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+@@ -69,6 +69,21 @@ var HardwareRevisionCharacteristic = function() {
+ 
+ util.inherits(HardwareRevisionCharacteristic, BlenoCharacteristic);
+ 
++var SoftwareRevisionCharacteristic = function() {
++  SoftwareRevisionCharacteristic.super_.call(this, {
++    uuid: '2a28',
++    properties: ['read'],
++// REPLACE SoftwareRevisionCharacteristic  value: new Buffer("REPLACE: 1.4.400 "),
++    descriptors: [
++      new BlenoDescriptor({
++        uuid: '2901',
++        value: 'software revision'
++      })
++    ]
++  });
++}
++
++util.inherits(HardwareRevisionCharacteristic, BlenoCharacteristic);
+ 
+ function DeviceInformationService() {
+   DeviceInformationService.super_.call(this, {
+@@ -77,7 +92,8 @@ function DeviceInformationService() {
+       new ManufacturererNameCharacteristic,
+       new ModelNumberCharacteristic,
+       new SerialNumberCharacteristic,
+-      new HardwareRevisionCharacteristic
++      new HardwareRevisionCharacteristic,
++      new SoftwareRevisionCharacteristic
+     ]
+   });
+ }
+-- 

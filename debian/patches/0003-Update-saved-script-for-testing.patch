@@ -1,0 +1,24 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Wed, 13 Aug 2014 11:46:01 -0500
+Subject: Update "saved" script for testing.
+
+---
+ bleno/trueScripts/advertiseWorkout.js.save |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/bleno/trueScripts/advertiseWorkout.js.save b/bleno/trueScripts/advertiseWorkout.js.save
+index 5ef478f..1239335 100644
+--- a/bleno/trueScripts/advertiseWorkout.js.save
++++ b/bleno/trueScripts/advertiseWorkout.js.save
+@@ -21,9 +21,7 @@ console.log('main');
+ bleno.on('stateChange', function(state) {
+   console.log('on -> stateChange: ' + state);
+   if (state === 'poweredOn') {
+-    bleno.startAdvertising('Workout 48:55', ['9dc17002-8855-11e3-979a-78acc0b87777',
+-                                            '9dc17003-8855-11e3-979a-78acc0b87777']);
+-
++    bleno.startAdvertising('Workout 48:55', ['9dc17002-8855-11e3-979a-78acc0b87777']);
+   } else {
+     bleno.stopAdvertising();
+   }
+-- 

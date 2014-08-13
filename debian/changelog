@@ -1,4 +1,6 @@
-bleno (0.1.5-1true3) clever-testing; urgency=low
+bleno (0.1.5-1true3~1.gbpda247a) clever-testing; urgency=low
+
+  ** SNAPSHOT build @da247a03044b6fd1d4d88bfdfae1191896977889 **
 
   [ Robert Hedges ]
   * Path to support advertising single UUID with no dashes.
@@ -25,7 +27,12 @@ bleno (0.1.5-1true3) clever-testing; urgency=low
 
   [ Robert ]
 
- -- Robert <rhedges@veracityBuild2>  Wed, 13 Aug 2014 15:42:25 -0500
+  [ Robert Hedges ]
+  * Moved placeholder script out of the way of the generated script.
+
+  [ Robert ]
+
+ -- Robert <rhedges@veracityBuild2>  Wed, 13 Aug 2014 16:02:58 -0500
 
 bleno (0.1.3+f973550e31-1true3) clever-testing; urgency=low
 

@@ -1,0 +1,22 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Wed, 13 Aug 2014 16:32:03 -0500
+Subject: Fixed typo
+
+---
+ .../blenoDeviceInformationServiceTEMPLATE.js       |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+index c8563f2..3b62d34 100644
+--- a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
++++ b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+@@ -83,7 +83,7 @@ var SoftwareRevisionCharacteristic = function() {
+   });
+ }
+ 
+-util.inherits(HardwareRevisionCharacteristic, BlenoCharacteristic);
++util.inherits(SoftwareRevisionCharacteristic, BlenoCharacteristic);
+ 
+ function DeviceInformationService() {
+   DeviceInformationService.super_.call(this, {
+-- 

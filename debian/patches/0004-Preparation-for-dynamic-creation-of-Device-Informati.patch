@@ -1,0 +1,344 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Wed, 13 Aug 2014 13:55:33 -0500
+Subject: Preparation for dynamic creation of Device Information Service  by
+ Veracity.
+
+---
+ bleno/trueScripts/advertiseWorkout.DIS.js          |    4 +-
+ bleno/trueScripts/blenoDeviceInformationService.js |   42 ++++++++--
+ bleno/trueScripts/blenoDeviceNameService.js        |   57 -------------
+ .../blenoHardwareRevisionCharacteristic.js         |   36 --------
+ .../trueScripts/blenoSerialNumberCharacteristic.js |   23 ------
+ .../blenoDeviceInformationServiceTEMPLATE.js       |   87 ++++++++++++++++++++
+ 6 files changed, 124 insertions(+), 125 deletions(-)
+ delete mode 100644 bleno/trueScripts/blenoDeviceNameService.js
+ delete mode 100644 bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
+ delete mode 100644 bleno/trueScripts/blenoSerialNumberCharacteristic.js
+ create mode 100644 bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+
+diff --git a/bleno/trueScripts/advertiseWorkout.DIS.js b/bleno/trueScripts/advertiseWorkout.DIS.js
+index 8c35617..391a6e1 100644
+--- a/bleno/trueScripts/advertiseWorkout.DIS.js
++++ b/bleno/trueScripts/advertiseWorkout.DIS.js
+@@ -4,9 +4,9 @@ var bleno = require('../index');
+ var BlenoPrimaryService = bleno.PrimaryService;
+ var BlenoCharacteristic = bleno.Characteristic;
+ var BlenoDescriptor = bleno.Descriptor;
+-var hardware= {serialNumber:"1234", type:"treadmill"};
++
+ var DeviceInformationService = require('./blenoDeviceInformationService');
+-var deviceInformationService = new DeviceInformationService(hardware.serialNumber);
++var deviceInformationService = new DeviceInformationService();
+ //var deviceInformationService = new DeviceInformationService();
+ 
+ var WorkoutStatsService =require('./blenoWorkoutStatsService.js')
+diff --git a/bleno/trueScripts/blenoDeviceInformationService.js b/bleno/trueScripts/blenoDeviceInformationService.js
+index 8f12439..3577239 100644
+--- a/bleno/trueScripts/blenoDeviceInformationService.js
++++ b/bleno/trueScripts/blenoDeviceInformationService.js
+@@ -4,8 +4,6 @@ var bleno = require('../index');
+ var BlenoPrimaryService = bleno.PrimaryService;
+ var BlenoCharacteristic = bleno.Characteristic;
+ var BlenoDescriptor = bleno.Descriptor;
+-var SerialNumberCharacteristic = require('./blenoSerialNumberCharacteristic');
+-var HardwareRevisionCharacteristic = require('./blenoHardwareRevisionCharacteristic');
+ 
+ 
+ 
+@@ -13,7 +11,7 @@ var ManufacturererNameCharacteristic = function() {
+   ManufacturererNameCharacteristic.super_.call(this, {
+    uuid: '2A29',
+    properties: ['read'],
+-   value: new Buffer('True Fitness'),
++   value: new Buffer('TrueFitness '),
+    descriptors: [
+     new BlenoDescriptor({
+     uuid: '2901',
+@@ -28,7 +26,7 @@ var ModelNumberCharacteristic = function() {
+   ModelNumberCharacteristic.super_.call(this, {
+    uuid: '2A24',
+    properties: ['read'],
+-   value: new Buffer('Veractity XXX'),
++   value: new Buffer('REPLACE: XCS600 '),
+    descriptors: [
+     new BlenoDescriptor({
+     uuid: '2901',
+@@ -39,17 +37,47 @@ var ModelNumberCharacteristic = function() {
+ };
+ util.inherits(ModelNumberCharacteristic, BlenoCharacteristic);
+ 
++var SerialNumberCharacteristic = function() {
++  SerialNumberCharacteristic.super_.call(this, {
++    uuid: '2a25',
++    properties: ['read'],
++    value: new Buffer("REPLACE: 001-387DEAD "),
++    descriptors: [
++      new BlenoDescriptor({
++        uuid: '2901',
++        value: 'Veracity serial number'
++      })
++    ]
++  });
++}
++
++util.inherits(SerialNumberCharacteristic, BlenoCharacteristic);
++
++var HardwareRevisionCharacteristic = function() {
++  HardwareRevisionCharacteristic.super_.call(this, {
++    uuid: '2a27',
++    properties: ['read'],
++    value: new Buffer("REPLACE: FEED "),
++    descriptors: [
++      new BlenoDescriptor({
++        uuid: '2901',
++        value: 'hardware version'
++      })
++    ]
++  });
++}
+ 
++util.inherits(HardwareRevisionCharacteristic, BlenoCharacteristic);
+ 
+ 
+-function DeviceInformationService(hardware) {
++function DeviceInformationService() {
+   DeviceInformationService.super_.call(this, {
+     uuid: '180a',
+     characteristics: [
+       new ManufacturererNameCharacteristic,
+       new ModelNumberCharacteristic,
+-      new SerialNumberCharacteristic(hardware),
+-      new HardwareRevisionCharacteristic(hardware)
++      new SerialNumberCharacteristic,
++      new HardwareRevisionCharacteristic
+     ]
+   });
+ }
+diff --git a/bleno/trueScripts/blenoDeviceNameService.js b/bleno/trueScripts/blenoDeviceNameService.js
+deleted file mode 100644
+index c9b9dd0..0000000
+--- a/bleno/trueScripts/blenoDeviceNameService.js
++++ /dev/null
+@@ -1,57 +0,0 @@
+-var util = require('util');
+-
+-var bleno = require('../..');
+-var BlenoPrimaryService = bleno.PrimaryService;
+-
+-
+-
+-var BlenoCharacteristic = bleno.Characteristic;
+-var BlenoDescriptor = bleno.Descriptor;
+-
+-
+-
+-var DeviceNameCharacteristic = function() {
+-  DeviceNameCharacteristic.super_.call(this, {
+-   uuid: '2A00',
+-   properties: ['read'],
+-   value: new Buffer('Fitness Stats'),
+-   descriptors: [
+-    new BlenoDescriptor({
+-    uuid: '2901',
+-    value: 'Fitness Stats'
+-        })
+-   ]
+-  });
+-};
+-util.inherits(DeviceNameCharacteristic, BlenoCharacteristic);
+-
+-var DeviceAppearanceCharacteristic = function() {
+-  DeviceAppearanceCharacteristic.super_.call(this, {
+-   uuid: '2A01',
+-   properties: ['read'],
+-   value: new Buffer('1088'), // Generic Running Walking Sensor
+-   descriptors: [
+-    new BlenoDescriptor({
+-    uuid: '2901',
+-    value: 'Fitness Stats'
+-        })
+-   ]
+-  });
+-};
+-util.inherits(DeviceAppearanceCharacteristic, BlenoCharacteristic);
+-
+-
+-
+-function DeviceNameService(hardware) {
+-  DeviceNameService.super_.call(this, {
+-    uuid: '180a',
+-    characteristics: [
+-      new ManufacturererNameCharacteristic,
+-      new ModelNumberCharacteristic
+-      ]
+-  });
+-}
+-
+-util.inherits(DeviceNameService, BlenoPrimaryService);
+-
+-module.exports = DeviceNameService;
+diff --git a/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js b/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
+deleted file mode 100644
+index c81518c..0000000
+--- a/bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
++++ /dev/null
+@@ -1,36 +0,0 @@
+-var util = require('util');
+-var bleno = require('../index');
+-
+-var BlenoPrimaryService = bleno.PrimaryService;
+-var BlenoCharacteristic = bleno.Characteristic;
+-var BlenoDescriptor = bleno.Descriptor;
+-
+-function HardwareRevisionCharacteristic(hardware) {
+-  HardwareRevisionCharacteristic.super_.call(this, {
+-    uuid: '2a27',
+-    properties: ['read'],
+-    value: new Buffer("1a"),
+-    descriptors: [
+-      new BlenoDescriptor({
+-        uuid: '2901',
+-        value: 'hardware version'
+-      })
+-    ]
+-  });
+-
+-  this.hardware = hardware;
+-}
+-
+-util.inherits(HardwareRevisionCharacteristic, BlenoCharacteristic);
+-
+-//HardwareRevisionCharacteristic.prototype.onReadRequest = function(offset, callback) {
+-//    if (offset) {
+-//    callback(this.RESULT_ATTR_NOT_LONG, null);
+-//  } else {
+-//    this.blink1.version(function(version) {
+-//      callback(this.RESULT_SUCCESS, new Buffer(version));
+-//    }.bind(this));
+-//  }
+-//};
+-
+-module.exports = HardwareRevisionCharacteristic;
+diff --git a/bleno/trueScripts/blenoSerialNumberCharacteristic.js b/bleno/trueScripts/blenoSerialNumberCharacteristic.js
+deleted file mode 100644
+index 0065eab..0000000
+--- a/bleno/trueScripts/blenoSerialNumberCharacteristic.js
++++ /dev/null
+@@ -1,23 +0,0 @@
+-var util = require('util');
+-var bleno = require('../index');
+-
+-var BlenoCharacteristic = bleno.Characteristic;
+-var BlenoDescriptor = bleno.Descriptor;
+-
+-function SerialNumberCharacteristic(hardware) {
+-  SerialNumberCharacteristic.super_.call(this, {
+-    uuid: '2a25',
+-    properties: ['read'],
+-    value: new Buffer("O1234"),
+-    descriptors: [
+-      new BlenoDescriptor({
+-        uuid: '2901',
+-        value: 'Veracity serial number'
+-      })
+-    ]
+-  });
+-}
+-
+-util.inherits(SerialNumberCharacteristic, BlenoCharacteristic);
+-
+-module.exports = SerialNumberCharacteristic;
+diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+new file mode 100644
+index 0000000..f19baa5
+--- /dev/null
++++ b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+@@ -0,0 +1,87 @@
++var util = require('util');
++var bleno = require('../index');
++
++var BlenoPrimaryService = bleno.PrimaryService;
++var BlenoCharacteristic = bleno.Characteristic;
++var BlenoDescriptor = bleno.Descriptor;
++
++
++
++var ManufacturererNameCharacteristic = function() {
++  ManufacturererNameCharacteristic.super_.call(this, {
++   uuid: '2A29',
++   properties: ['read'],
++   value: new Buffer('TrueFitness '),
++   descriptors: [
++    new BlenoDescriptor({
++    uuid: '2901',
++    value: 'Manufacturer Name'
++        })
++   ]
++  });
++};
++util.inherits(ManufacturererNameCharacteristic, BlenoCharacteristic);
++
++var ModelNumberCharacteristic = function() {
++  ModelNumberCharacteristic.super_.call(this, {
++   uuid: '2A24',
++   properties: ['read'],
++// REPLACE   value: new Buffer('REPLACE: XCS600 '),
++   descriptors: [
++    new BlenoDescriptor({
++    uuid: '2901',
++    value: 'Model Number String'
++        })
++   ]
++  });
++};
++util.inherits(ModelNumberCharacteristic, BlenoCharacteristic);
++
++var SerialNumberCharacteristic = function() {
++  SerialNumberCharacteristic.super_.call(this, {
++    uuid: '2a25',
++    properties: ['read'],
++// REPLACE value: new Buffer("REPLACE: 001-387DEAD "),
++    descriptors: [
++      new BlenoDescriptor({
++        uuid: '2901',
++        value: 'Veracity serial number'
++      })
++    ]
++  });
++}
++
++util.inherits(SerialNumberCharacteristic, BlenoCharacteristic);
++
++var HardwareRevisionCharacteristic = function() {
++  HardwareRevisionCharacteristic.super_.call(this, {
++    uuid: '2a27',
++    properties: ['read'],
++// REPLACE    value: new Buffer("REPLACE: FEED "),
++    descriptors: [
++      new BlenoDescriptor({
++        uuid: '2901',
++        value: 'hardware version'
++      })
++    ]
++  });
++}
++
++util.inherits(HardwareRevisionCharacteristic, BlenoCharacteristic);
++
++
++function DeviceInformationService() {
++  DeviceInformationService.super_.call(this, {
++    uuid: '180a',
++    characteristics: [
++      new ManufacturererNameCharacteristic,
++      new ModelNumberCharacteristic,
++      new SerialNumberCharacteristic,
++      new HardwareRevisionCharacteristic
++    ]
++  });
++}
++
++util.inherits(DeviceInformationService, BlenoPrimaryService);
++
++module.exports = DeviceInformationService;
+-- 

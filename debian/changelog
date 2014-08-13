@@ -1,6 +1,6 @@
-bleno (0.1.5-1true3~1.gbpda247a) clever-testing; urgency=low
+bleno (0.1.5-1true3~2.gbpae85af) clever-testing; urgency=low
 
-  ** SNAPSHOT build @da247a03044b6fd1d4d88bfdfae1191896977889 **
+  ** SNAPSHOT build @ae85afd1d64270de717880e3352de59e6e7a0cf9 **
 
   [ Robert Hedges ]
   * Path to support advertising single UUID with no dashes.
@@ -32,7 +32,13 @@ bleno (0.1.5-1true3~1.gbpda247a) clever-testing; urgency=low
 
   [ Robert ]
 
- -- Robert <rhedges@veracityBuild2>  Wed, 13 Aug 2014 16:02:58 -0500
+  [ Robert Hedges ]
+  * Snapshot build
+  * Add app software version to DIS.
+
+  [ Robert ]
+
+ -- Robert <rhedges@veracityBuild2>  Wed, 13 Aug 2014 16:27:00 -0500
 
 bleno (0.1.3+f973550e31-1true3) clever-testing; urgency=low
 

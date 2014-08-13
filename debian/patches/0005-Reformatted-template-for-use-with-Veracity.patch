@@ -1,0 +1,40 @@
+From: Robert Hedges <rhedges@truefitness.com>
+Date: Wed, 13 Aug 2014 14:39:53 -0500
+Subject: Reformatted template for use with Veracity.
+
+---
+ .../blenoDeviceInformationServiceTEMPLATE.js       |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+index f19baa5..86450d4 100644
+--- a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
++++ b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
+@@ -26,7 +26,7 @@ var ModelNumberCharacteristic = function() {
+   ModelNumberCharacteristic.super_.call(this, {
+    uuid: '2A24',
+    properties: ['read'],
+-// REPLACE   value: new Buffer('REPLACE: XCS600 '),
++// REPLACE ModelNumberCharacteristic value: new Buffer('REPLACE: XCS600 '),
+    descriptors: [
+     new BlenoDescriptor({
+     uuid: '2901',
+@@ -41,7 +41,7 @@ var SerialNumberCharacteristic = function() {
+   SerialNumberCharacteristic.super_.call(this, {
+     uuid: '2a25',
+     properties: ['read'],
+-// REPLACE value: new Buffer("REPLACE: 001-387DEAD "),
++// REPLACE SerialNumberCharacteristic value: new Buffer("REPLACE: 001-387DEAD "),
+     descriptors: [
+       new BlenoDescriptor({
+         uuid: '2901',
+@@ -57,7 +57,7 @@ var HardwareRevisionCharacteristic = function() {
+   HardwareRevisionCharacteristic.super_.call(this, {
+     uuid: '2a27',
+     properties: ['read'],
+-// REPLACE    value: new Buffer("REPLACE: FEED "),
++// REPLACE HardwareRevisionCharacteristic  value: new Buffer("REPLACE: FEED "),
+     descriptors: [
+       new BlenoDescriptor({
+         uuid: '2901',
+-- 

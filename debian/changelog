@@ -1,6 +1,6 @@
-bleno (0.1.5-1true3~3.gbp52e426) clever-testing; urgency=low
+bleno (0.1.5-1true3~4.gbp00584e) clever-testing; urgency=low
 
-  ** SNAPSHOT build @52e4262570dccdcef4f20d803d134b7e33650d63 **
+  ** SNAPSHOT build @00584e4ef6353f82308dea4dd6f9ab29e4caabf7 **
 
   [ Robert Hedges ]
   * Path to support advertising single UUID with no dashes.
@@ -44,7 +44,13 @@ bleno (0.1.5-1true3~3.gbp52e426) clever-testing; urgency=low
 
   [ Robert ]
 
- -- Robert <rhedges@veracityBuild2>  Wed, 13 Aug 2014 16:33:31 -0500
+  [ Robert Hedges ]
+  * Snapshot build
+  * Delete errant file.
+
+  [ vagrant ]
+
+ -- vagrant <vagrant@vagrant.vm>  Wed, 10 Sep 2014 20:05:13 +0000
 
 bleno (0.1.3+f973550e31-1true3) clever-testing; urgency=low
 

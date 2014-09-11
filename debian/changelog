@@ -1,3 +1,74 @@
+bleno (0.1.5-1true5) clever-testing; urgency=medium
+
+  * Path to support advertising single UUID with no dashes.
+  * Updated control file to provide the correct section and upstream URL
+  * Activate Device Information Service.
+  * Imported Upstream version 0.1.5
+  * Properly importing upstream 1.5 and activating Device information service.
+  * Minor mods to help with development.
+  * Created Template for Device information Service
+  * snapshot build
+  * Reformatted Device Information Template for Veracity.
+  * Snapshot build
+  * Release for test
+  * Moved placeholder script out of the way of the generated script.
+  * Snapshot build
+  * Add app software version to DIS.
+  * Snapshot build
+  * Fixed typo in SoftwareRevsion characteristic
+  * Snapshot build
+  * Delete errant file causing data from advertising correctly.
+  * build
+
+ -- Robert Hedges <rhedges@truefitness.com>  Thu, 11 Sep 2014 14:40:27 -0500
+
+bleno (0.1.5-1true4) clever-testing; urgency=medium
+
+  * Path to support advertising single UUID with no dashes.
+  * Updated control file to provide the correct section and upstream URL
+  * Activate Device Information Service.
+  * Imported Upstream version 0.1.5
+  * Properly importing upstream 1.5 and activating Device information service.
+  * Minor mods to help with development.
+  * Created Template for Device information Service
+  * snapshot build
+  * Reformatted Device Information Template for Veracity.
+  * Snapshot build
+  * Release for test
+  * Moved placeholder script out of the way of the generated script.
+  * Snapshot build
+  * Add app software version to DIS.
+  * Snapshot build
+  * Fixed typo in SoftwareRevsion characteristic
+  * Snapshot build
+  * Delete errant file causing data from advertising correctly.
+  * build
+
+ -- Robert Hedges <rhedges@truefitness.com>  Thu, 11 Sep 2014 14:38:48 -0500
+
+bleno (0.1.5-1true3) clever-testing; urgency=low
+
+  * Updated control file to provide the correct section and upstream URL
+  * Activate Device Information Service.
+  * Imported Upstream version 0.1.5
+  * Properly importing upstream 1.5 and activating Device information service.
+  * Minor mods to help with development.
+  * Created Template for Device information Service
+  * snapshot build
+  * Reformatted Device Information Template for Veracity.
+  * Snapshot build
+  * Release for test
+  * Moved placeholder script out of the way of the generated script.
+  * Snapshot build
+  * Add app software version to DIS.
+  * Snapshot build
+  * Fixed typo in SoftwareRevsion characteristic
+  * Snapshot build
+  * Delete errant file causing data from advertising correctly.
+  * build
+
+ -- Robert Hedges <rhedges@truefitness.com>  Thu, 11 Sep 2014 14:37:47 -0500
+
 bleno (0.1.5-1true3~4.gbp00584e) clever-testing; urgency=low
 
   ** SNAPSHOT build @00584e4ef6353f82308dea4dd6f9ab29e4caabf7 **

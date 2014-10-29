@@ -3,7 +3,7 @@ Date: Wed, 9 Jul 2014 13:41:55 -0500
 Subject: Only advertise one UUID
 
 ---
- bleno/trueTemplates/advertiseWorkoutTEMPLATE.js |    3 +--
+ bleno/trueTemplates/advertiseWorkoutTEMPLATE.js | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js b/bleno/trueTemplates/advertiseWorkoutTEMPLATE.js
@@ -20,4 +20,3 @@ index 9569e32..2df8992 100644
  
    } else {
      bleno.stopAdvertising();
--- 

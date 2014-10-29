@@ -3,7 +3,7 @@ Date: Wed, 13 Aug 2014 16:32:03 -0500
 Subject: Fixed typo
 
 ---
- .../blenoDeviceInformationServiceTEMPLATE.js       |    2 +-
+ bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
@@ -19,4 +19,3 @@ index c8563f2..3b62d34 100644
  
  function DeviceInformationService() {
    DeviceInformationService.super_.call(this, {
--- 

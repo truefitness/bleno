@@ -7,3 +7,4 @@
 0007-Add-app-software-version-to-DIS.patch
 0008-Fixed-typo.patch
 0009-Remove-a-test-file-that-should-not-have-been-commite.patch
+0010-Modify-User-Data-Service-to-use-Bluetooth-Sig-UUIDs.patch

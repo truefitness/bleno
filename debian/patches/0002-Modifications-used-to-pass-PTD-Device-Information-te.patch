@@ -3,11 +3,11 @@ Date: Fri, 8 Aug 2014 18:34:42 -0500
 Subject: Modifications used to pass PTD Device Information tests.
 
 ---
- bleno/trueScripts/advertiseWorkout.DIS.js          |   47 ++++++++++++++++++++
- bleno/trueScripts/blenoDeviceInformationService.js |    9 ++--
- .../blenoHardwareRevisionCharacteristic.js         |    5 ++-
- .../trueScripts/blenoSerialNumberCharacteristic.js |    5 +--
- bleno/trueTemplates/advertiseWorkoutTEMPLATE.js    |    8 ++--
+ bleno/trueScripts/advertiseWorkout.DIS.js          | 47 ++++++++++++++++++++++
+ bleno/trueScripts/blenoDeviceInformationService.js |  9 ++---
+ .../blenoHardwareRevisionCharacteristic.js         |  5 ++-
+ .../trueScripts/blenoSerialNumberCharacteristic.js |  5 +--
+ bleno/trueTemplates/advertiseWorkoutTEMPLATE.js    |  8 ++--
  5 files changed, 60 insertions(+), 14 deletions(-)
  create mode 100644 bleno/trueScripts/advertiseWorkout.DIS.js
 
@@ -155,4 +155,3 @@ index 2df8992..3290145 100644
    }
  });
  
--- 

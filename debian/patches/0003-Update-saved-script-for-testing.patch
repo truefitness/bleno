@@ -3,7 +3,7 @@ Date: Wed, 13 Aug 2014 11:46:01 -0500
 Subject: Update "saved" script for testing.
 
 ---
- bleno/trueScripts/advertiseWorkout.js.save |    4 +---
+ bleno/trueScripts/advertiseWorkout.js.save | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/bleno/trueScripts/advertiseWorkout.js.save b/bleno/trueScripts/advertiseWorkout.js.save
@@ -21,4 +21,3 @@ index 5ef478f..1239335 100644
    } else {
      bleno.stopAdvertising();
    }
--- 

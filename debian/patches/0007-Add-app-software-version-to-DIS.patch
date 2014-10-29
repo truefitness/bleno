@@ -3,7 +3,7 @@ Date: Wed, 13 Aug 2014 16:25:33 -0500
 Subject: Add app software version to DIS.
 
 ---
- .../blenoDeviceInformationServiceTEMPLATE.js       |   18 +++++++++++++++++-
+ .../blenoDeviceInformationServiceTEMPLATE.js           | 18 +++++++++++++++++-
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
@@ -42,4 +42,3 @@ index 86450d4..c8563f2 100644
      ]
    });
  }
--- 

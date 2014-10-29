@@ -3,7 +3,7 @@ Date: Wed, 13 Aug 2014 14:39:53 -0500
 Subject: Reformatted template for use with Veracity.
 
 ---
- .../blenoDeviceInformationServiceTEMPLATE.js       |    6 +++---
+ bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js b/bleno/trueTemplates/blenoDeviceInformationServiceTEMPLATE.js
@@ -37,4 +37,3 @@ index f19baa5..86450d4 100644
      descriptors: [
        new BlenoDescriptor({
          uuid: '2901',
--- 

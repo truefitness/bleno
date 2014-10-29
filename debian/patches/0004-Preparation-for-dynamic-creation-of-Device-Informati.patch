@@ -4,12 +4,12 @@ Subject: Preparation for dynamic creation of Device Information Service by
  Veracity.
 
 ---
- bleno/trueScripts/advertiseWorkout.DIS.js          |    4 +-
- bleno/trueScripts/blenoDeviceInformationService.js |   42 ++++++++--
- bleno/trueScripts/blenoDeviceNameService.js        |   57 -------------
- .../blenoHardwareRevisionCharacteristic.js         |   36 --------
- .../trueScripts/blenoSerialNumberCharacteristic.js |   23 ------
- .../blenoDeviceInformationServiceTEMPLATE.js       |   87 ++++++++++++++++++++
+ bleno/trueScripts/advertiseWorkout.DIS.js          |  4 +-
+ bleno/trueScripts/blenoDeviceInformationService.js | 42 +++++++++--
+ bleno/trueScripts/blenoDeviceNameService.js        | 57 --------------
+ .../blenoHardwareRevisionCharacteristic.js         | 36 ---------
+ .../trueScripts/blenoSerialNumberCharacteristic.js | 23 ------
+ .../blenoDeviceInformationServiceTEMPLATE.js       | 87 ++++++++++++++++++++++
  6 files changed, 124 insertions(+), 125 deletions(-)
  delete mode 100644 bleno/trueScripts/blenoDeviceNameService.js
  delete mode 100644 bleno/trueScripts/blenoHardwareRevisionCharacteristic.js
@@ -341,4 +341,3 @@ index 0000000..f19baa5
 +util.inherits(DeviceInformationService, BlenoPrimaryService);
 +
 +module.exports = DeviceInformationService;
--- 

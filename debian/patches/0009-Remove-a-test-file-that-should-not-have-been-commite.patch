@@ -3,7 +3,7 @@ Date: Wed, 10 Sep 2014 20:03:06 +0000
 Subject: Remove a test file that should not have been commited.
 
 ---
- bleno/trueScripts/blenoWorkoutStatsService.js |  204 -------------------------
+ bleno/trueScripts/blenoWorkoutStatsService.js | 204 --------------------------
  1 file changed, 204 deletions(-)
  delete mode 100644 bleno/trueScripts/blenoWorkoutStatsService.js
 
@@ -217,4 +217,3 @@ index 4f4648c..0000000
 -util.inherits(WorkoutStatsService, BlenoPrimaryService);
 -
 -module.exports =WorkoutStatsService;
--- 

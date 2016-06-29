@@ -1,3 +1,11 @@
+bleno (4.0.0true1~5) UNRELEASED; urgency=medium
+
+  * Imported Upstream version 0.4.0
+  * Remove unneeded build steps
+  * Remove unneeded postinst
+
+ -- Robert Hedges <rhedges@truefitness.com>  Tue, 28 Jun 2016 21:01:47 -0500
+
 bleno (0.1.5-1true3~4.gbp00584e) clever-testing; urgency=low
 
   ** SNAPSHOT build @00584e4ef6353f82308dea4dd6f9ab29e4caabf7 **

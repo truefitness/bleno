@@ -16,7 +16,7 @@ TARGET=./build/Release
 
 DEPLOY=$(INSTALL)/$(APPNAME)/$(BIN)
 SRCDIR=bleno/src
-all: hci-ble l2cap-ble
+all: show
 
 show:
 	@echo $(VERSION) $(APPDIR)
@@ -28,28 +28,26 @@ dist-clean: clean
 	rm -f $(TARNAME)
 
 
-hci-ble:	$(SRCDIR)/hci-ble.c
-	mkdir -p $(TMPDIR)
-	$(CC) $< -l $(LIBS) -o $(TMPDIR)/hci-ble
+#hci-ble:	$(SRCDIR)/hci-ble.c
+#	mkdir -p $(TMPDIR)
+#	$(CC) $< -l $(LIBS) -o $(TMPDIR)/hci-ble
 
-l2cap-ble:	$(SRCDIR)/l2cap-ble.c
-	mkdir -p $(TMPDIR)
-	$(CC) $< -l $(LIBS) -o $(TMPDIR)/l2cap-ble
+#l2cap-ble:	$(SRCDIR)/l2cap-ble.c
+#	mkdir -p $(TMPDIR)
+#	$(CC) $< -l $(LIBS) -o $(TMPDIR)/l2cap-ble
 
 install: all
 	mkdir -p $(BINDIR)
 	cp -r ./bleno/* $(TOPDIR)
-	cp $(TMPDIR)/* $(BINDIR)
+	#cp $(TMPDIR)/* $(BINDIR)
 tarball:
 	@echo copying sourcetree
 	@echo version $(VERSION)
 	mkdir -p $(APPDIR)
 	cp -a ./$(APPNAME) $(APPDIR)
-	rm -rf $(APPDIR)/.git	
+	rm -rf $(APPDIR)/.git
 	cp Makefile $(APPDIR)
 	@echo creating tar archive
 	tar czf ${TARNAME} ${APPDIR}
 
 .PHONY : clean install dist-clean tarball
-
-

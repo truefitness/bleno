@@ -1,44 +1,90 @@
-bleno
-=====
+# bleno
 
-A node.js module for implementing BLE (Bluetooth low energy) peripherals.
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sandeepmistry/bleno?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+
+A Node.js module for implementing BLE (Bluetooth Low Energy) peripherals.
 
 Need a BLE central module? See [noble](https://github.com/sandeepmistry/noble).
 
-__Note:__ Mac OS X and Linux are currently the only supported OSes, and are still under development. Other platforms will be developed later on (see Roadmap below).
+__Note:__ Mac OS X, Linux, and Windows are currently the only supported OSes.
 
-Prerequisites
-------------
+## Prerequisites
 
-__Linux (Ubuntu)__
+### OS X
 
- * ```sudo apt-get install libbluetooth-dev```
- * Run as ```sudo``` or ```root```
-
-__OS X__
-
+ * install [Xcode](https://itunes.apple.com/ca/app/xcode/id497799835?mt=12)
  * 10.9 or later
 
-Install
--------
+### Linux
 
-    npm install bleno
+ * Kernel version 3.6 or above
+ * ```libbluetooth-dev```
+ * ```bluetoothd``` disabled, if BlueZ 5.14 or later is installed. Use ```sudo hciconfig hci0 up``` to power Bluetooth adapter up after stopping or disabling ```bluetoothd```.
+    * ```System V```:
+      * ```sudo service bluetooth stop``` (once)
+      * ```sudo update-rc.d bluetooth remove``` (persist on reboot)
+    * ```systemd```
+      * ```sudo systemctl stop bluetooth``` (once)
+      * ```sudo systemctl disable bluetooth``` (persist on reboot)
 
-Usage
------
+#### Ubuntu/Debian/Raspbian
 
-    var bleno = require('bleno');
+```sh
+sudo apt-get install bluetooth bluez libbluetooth-dev libudev-dev
+```
+
+Make sure ```node``` is on your path, if it's not, some options:
+ * symlink ```nodejs``` to ```node```: ```sudo ln -s /usr/bin/nodejs /usr/bin/node```
+ * [install Node.js using the NodeSource package](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
+
+#### Fedora / Other-RPM based
+
+```sh
+sudo yum install bluez bluez-libs bluez-libs-devel
+```
+
+#### Intel Edison
+
+See [Configure Intel Edison for Bluetooth LE (Smart) Development](http://rexstjohn.com/configure-intel-edison-for-bluetooth-le-smart-development/)
+
+### Windows
+
+ * [node-gyp requirements for Windows](https://github.com/TooTallNate/node-gyp#installation)
+   * Python 2.7
+   * Visual Studio ([Express](https://www.visualstudio.com/en-us/products/visual-studio-express-vs.aspx))
+ * [node-bluetooth-hci-socket prerequisites](https://github.com/sandeepmistry/node-bluetooth-hci-socket#windows)
+   * Compatible Bluetooth 4.0 USB adapter
+   * [WinUSB](https://msdn.microsoft.com/en-ca/library/windows/hardware/ff540196(v=vs.85).aspx) driver setup for Bluetooth 4.0 USB adapter, using [Zadig tool](http://zadig.akeo.ie/)
+
+## Install
+
+```sh
+npm install bleno
+```
+
+## Usage
+
+```javascript
+var bleno = require('bleno');
+```
 
 See [examples folder](https://github.com/sandeepmistry/bleno/blob/master/examples) for code examples.
 
-__Actions__
+### Actions
 
-Start advertising:
+#### Advertising
 
-    var name = 'name';
-    var serviceUuids = ['fffffffffffffffffffffffffffffff0']
+##### Start advertising
 
-    bleno.startAdvertising(name, serviceUuids[, callback(error)]);
+NOTE: ```bleno.state``` must be ```poweredOn``` before advertising is started. ```bleno.on('stateChange', callback(state));``` can be used register for state change events.
+
+```javascript
+var name = 'name';
+var serviceUuids = ['fffffffffffffffffffffffffffffff0']
+
+bleno.startAdvertising(name, serviceUuids[, callback(error)]);
+```
 
  __Note:__: there are limits on the name and service UUID's
 
@@ -50,84 +96,105 @@ Start advertising:
     * 7 16-bit service UUID
 
 
-Start advertising iBeacon:
+##### Start advertising iBeacon
 
-    var uuid = 'e2c56db5dffb48d2b060d0f5a71096e0';
-    var major = 0; // 0x0000 - 0xffff
-    var minor = 0; // 0x0000 - 0xffff
-    var measuredPower = -59; // -128 - 127
+```javascript
+var uuid = 'e2c56db5dffb48d2b060d0f5a71096e0';
+var major = 0; // 0x0000 - 0xffff
+var minor = 0; // 0x0000 - 0xffff
+var measuredPower = -59; // -128 - 127
 
-    bleno.startAdvertisingIBeacon(uuid, major, minor, measuredPower[, callback(error)]);
+bleno.startAdvertisingIBeacon(uuid, major, minor, measuredPower[, callback(error)]);
+```
 
- __Note:__: on OS X, in iBeacon mode your peripheral is non-connectable!
+ __Notes:__:
+  * OS X:
+    * in iBeacon mode your peripheral is non-connectable!
 
-Start advertising with EIR data (__Linux only__):
+##### Start advertising with EIR data (__Linux only__)
 
-    var scanData = new Buffer(...); // maximum 31 bytes
-    var advertisementData = new Buffer(...); // maximum 31 bytes
+```javascript
+var scanData = new Buffer(...); // maximum 31 bytes
+var advertisementData = new Buffer(...); // maximum 31 bytes
 
-    bleno.startAdvertisingWithEIRData(advertisementData, scanData[, callback(error)]);
+bleno.startAdvertisingWithEIRData(advertisementData[, scanData, callback(error)]);
+```
 
   * For EIR format section [Bluetooth Core Specification](https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=229737) sections and 8 and 18 for more information the data format.
 
-Stop advertising:
+##### Stop advertising
 
-    bleno.stopAdvertising([callback]);
+```javascript
+bleno.stopAdvertising([callback]);
+```
 
-Set services:
+#### Set services
 
-    var services = [
-       ... // see PrimaryService for data type
-    ];
+Set the primary services available on the peripheral.
 
-    bleno.setServices(services[, callback(error)]);
+```javascript
+var services = [
+   ... // see PrimaryService for data type
+];
 
-Disconnect client:
+bleno.setServices(services[, callback(error)]);
+```
 
-    bleno.disconnect(); // Linux only
+#### Disconnect client
 
-Update RSSI:
+```javascript
+bleno.disconnect(); // Linux only
+```
 
-    bleno.updateRssi([callback(error, rssi)]); // Linux only
+#### Update RSSI
 
-__Primary Service__
+```javascript
+bleno.updateRssi([callback(error, rssi)]); // not available in OS X 10.9
+```
 
-    var PrimaryService = bleno.PrimaryService;
+### Primary Service
 
-    var primaryService = new PrimaryService({
-        uuid: 'fffffffffffffffffffffffffffffff0', // or 'fff0' for 16-bit
-        characteristics: [
-            // see Characteristic for data type
-        ]
-    });
+```javascript
+var PrimaryService = bleno.PrimaryService;
 
-__Characteristic__
+var primaryService = new PrimaryService({
+    uuid: 'fffffffffffffffffffffffffffffff0', // or 'fff0' for 16-bit
+    characteristics: [
+        // see Characteristic for data type
+    ]
+});
+```
 
-    var Characteristic = bleno.Characteristic;
+### Characteristic
 
-    var characteristic = new Characteristic({
-        uuid: 'fffffffffffffffffffffffffffffff1', // or 'fff1' for 16-bit
-        properties: [ ... ], // can be a combination of 'read', 'write', 'writeWithoutResponse', 'notify'
-        secure: [ ... ], // enable security for properties, can be a combination of 'read', 'write', 'writeWithoutResponse', 'notify'
-        value: null, // optional static value, must be of type Buffer
-        descriptors: [
-            // see Descriptor for data type
-        ],
-        onReadRequest: null, // optional read request handler, function(offset, callback) { ... }
-        onWriteRequest: null, // optional write request handler, function(data, offset, withoutResponse, callback) { ...}
-        onSubscribe: null, // optional notify subscribe handler, function(maxValueSize, updateValueCallback) { ...}
-        onUnsubscribe: null, // optional notify unsubscribe handler, function() { ...}
-        onNotify: null // optional notify sent handler, function() { ...}
-    });
+```javascript
+var Characteristic = bleno.Characteristic;
 
-Result codes:
+var characteristic = new Characteristic({
+    uuid: 'fffffffffffffffffffffffffffffff1', // or 'fff1' for 16-bit
+    properties: [ ... ], // can be a combination of 'read', 'write', 'writeWithoutResponse', 'notify', 'indicate'
+    secure: [ ... ], // enable security for properties, can be a combination of 'read', 'write', 'writeWithoutResponse', 'notify', 'indicate'
+    value: null, // optional static value, must be of type Buffer
+    descriptors: [
+        // see Descriptor for data type
+    ],
+    onReadRequest: null, // optional read request handler, function(offset, callback) { ... }
+    onWriteRequest: null, // optional write request handler, function(data, offset, withoutResponse, callback) { ...}
+    onSubscribe: null, // optional notify/indicate subscribe handler, function(maxValueSize, updateValueCallback) { ...}
+    onUnsubscribe: null, // optional notify/indicate unsubscribe handler, function() { ...}
+    onNotify: null // optional notify sent handler, function() { ...}
+    onIndicate: null // optional indicate confirmation received handler, function() { ...}
+});
+```
+
+#### Result codes
 
   * Characteristic.RESULT_SUCCESS
   * Characteristic.RESULT_INVALID_OFFSET
   * Characteristic.RESULT_INVALID_ATTRIBUTE_LENGTH
   * Characteristic.RESULT_UNLIKELY_ERROR
 
-Read requests:
+#### Read requests
 
 Can specify read request handler via constructor options or by extending Characteristic and overriding onReadRequest.
 
@@ -138,12 +205,14 @@ Parameters to handler are
 
 ```callback``` must be called with result and data (of type ```Buffer```) - can be async.
 
-    var result = Characteristic.RESULT_SUCCESS;
-    var data = new Buffer( ... );
+```javascript
+var result = Characteristic.RESULT_SUCCESS;
+var data = new Buffer( ... );
 
-    callback(result, data);
+callback(result, data);
+```
 
-Write requests:
+#### Write requests
 
 Can specify write request handler via constructor options or by extending Characteristic and overriding onWriteRequest.
 
@@ -155,11 +224,13 @@ Parameters to handler are
 
 ```callback``` must be called with result code - can be async.
 
-    var result = Characteristic.RESULT_SUCCESS;
+```javascript
+var result = Characteristic.RESULT_SUCCESS;
 
-    callback(result);
+callback(result);
+```
 
-Notify subscribe:
+#### Notify subscribe
 
 Can specify notify subscribe handler via constructor options or by extending Characteristic and overriding onSubscribe.
 
@@ -167,134 +238,133 @@ Parameters to handler are
   * ```maxValueSize``` (maximum data size)
   * ```updateValueCallback``` (callback to call when value has changed)
 
-Notify unsubscribe:
+#### Notify unsubscribe
 
 Can specify notify unsubscribe handler via constructor options or by extending Characteristic and overriding onUnsubscribe.
 
-Notify value changes:
+#### Notify value changes
 
 Call the ```updateValueCallback``` callback (see Notify subcribe), with an argument of type ```Buffer```
 
 Can specify notify sent handler via constructor options or by extending Characteristic and overriding onNotify.
 
-__Descriptor__
+### Descriptor
 
-    var Descriptor = bleno.Descriptor;
+```javascript
+var Descriptor = bleno.Descriptor;
 
-    var descriptor = new Descriptor({
-        uuid: '2901',
-        value: 'value' // static value, must be of type Buffer or string if set
-    });
+var descriptor = new Descriptor({
+    uuid: '2901',
+    value: 'value' // static value, must be of type Buffer or string if set
+});
+```
 
-__Events__
+### Events
 
-Adapter state change:
+#### Adapter state change
 
-    state = <"unknown" | "resetting" | "unsupported" | "unauthorized" | "poweredOff" | "poweredOn">
+```javascript
+state = <"unknown" | "resetting" | "unsupported" | "unauthorized" | "poweredOff" | "poweredOn">
 
-    bleno.on('stateChange', callback(state));
+bleno.on('stateChange', callback(state));
+```
 
-Advertisement started:
+#### Advertisement started
 
-    bleno.on('advertisingStart', callback(error));
+```javascript
+bleno.on('advertisingStart', callback(error));
 
-    bleno.on('advertisingStartError', callback(error));
+bleno.on('advertisingStartError', callback(error));
+```
 
-Advertisement stopped:
+#### Advertisement stopped
 
-    bleno.on('advertisingStop', callback);
+```javascript
+bleno.on('advertisingStop', callback);
+```
 
-Services set:
+#### Services set
 
-    bleno.on('servicesSet', callback);
+```javascript
+bleno.on('servicesSet', callback(error));
 
-Accept:
+bleno.on('servicesSetError', callback(error));
+```
 
-    bleno.on('accept', callback(clientAddress)); // Linux only
+#### Accept
 
-Disconnect:
+```javascript
+bleno.on('accept', callback(clientAddress)); // not available on OS X 10.9
+```
 
-    bleno.on('disconnect', callback(clientAddress)); // Linux only
+#### Disconnect
 
-RSSI Update:
+```javascript
+bleno.on('disconnect', callback(clientAddress)); // Linux only
+```
 
-    bleno.on('rssiUpdate', callback(rssi)); // Linux only
+#### RSSI Update
 
-Running on Linux
------------------
-Must be run with ```sudo``` or as root user.
+```javascript
+bleno.on('rssiUpdate', callback(rssi)); // not available on OS X 10.9
+```
+
+### Running on Linux
+
+#### Running without root/sudo
+
+Run the following command:
+
+```sh
+sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+```
+
+This grants the ```node``` binary ```cap_net_raw``` privileges, so it can start/stop BLE advertising.
+
+__Note:__ The above command requires ```setcap``` to be installed, it can be installed using the following:
+
+ * apt: ```sudo apt-get install libcap2-bin```
+ * yum: ```su -c \'yum install libcap2-bin\'```
+
+#### Multiple Adapters
 
 ```hci0``` is used by default to override set the ```BLENO_HCI_DEVICE_ID``` environment variable to the interface number.
 
 Example, specify ```hci1```:
 
-    sudo BLENO_HCI_DEVICE_ID=1 node <your file>.js
+```sh
+sudo BLENO_HCI_DEVICE_ID=1 node <your file>.js
+```
 
-Roadmap (TODO)
---------------
+#### Set custom device name
 
- * Mac OS X:
-   * ~~Adapter state (unknown | reseting | unsupported | unauthorized | off | on)~~
-   * ~~Advertisement~~
-      * ~~startAdvertising~~
-         * ~~name~~
-         * ~~service UUID's~~
-      * ~~startAdvertisingIBeacon~~
-      * ~~stopAdvertising~~
-   * ~~Services~~
-      * ~~UUID~~
-      * ~~Characteristics~~
-         * ~~UUID~~
-         * ~~properties~~
-           * ~~read (static, dynamic)~~
-           * ~~write~~
-           * ~~write without response~~
-           * ~~notify (subscribe, unsubscribe, value changed)~~
-           * broadcast (not possible)
-           * ~~indicate~~
-           * secure (not functioning, OS X issues)
-              * read
-              * write
-         * ~~Descriptors~~
-           * ~~UUID~~
-           * ~~read (static)~~
-           * write (not possible)
-      * Included Services (maybe ?)
-   * error handling
+By default bleno uses the hostname (```require('os').hostname()```) as the value for the device name (0x2a00) characterisic, to match the behaviour of OS X.
 
- * Linux
-   * ~~Adapter state (unsupported | unauthorized | off | on)~~
-   * ~~Advertisement~~
-      * ~~startAdvertising~~
-         * ~~name~~
-         * ~~service UUID's~~
-      * ~~startAdvertisingIBeacon~~
-      * ~~stopAdvertising~~
-   * ~~Services~~
-      * ~~UUID~~
-      * ~~Characteristics~~
-         * ~~UUID~~
-         * ~~properties~~
-           * ~~read (static, dynamic)~~
-           * ~~write~~
-           * ~~write without response~~
-           * ~~notify (subscribe, unsubscribe, value changed)~~
-           * broadcast (maybe ?)
-           * indicate (maybe ?)
-           * ~~secure~~
-               * ~~read~~
-               * ~~write~~
-         * ~~Descriptors~~
-           * ~~UUID~~
-           * ~~read (static)~~
-           * write (maybe ?)
-      * Included Services (maybe ?)
-   * error handling
- * Windows
-   * TDB (most likely Windows 8 only)
+A custom device name can be specified by setting the ```BLENO_DEVICE_NAME``` environment variable:
 
-Useful tools/links
-==================
+```sh
+sudo BLENO_DEVICE_NAME="custom device name" node <your file>.js
+```
+
+or
+
+```js
+process.env['BLENO_DEVICE_NAME'] = 'custom device name';
+```
+
+#### Set Advertising Interval
+
+bleno uses a 100 ms advertising interval by default.
+
+A custom advertising interval can be specified by setting the ```BLENO_ADVERTISING_INTERVAL``` enviroment variable with the desired value in milliseconds:
+
+```sh
+sudo BLENO_ADVERTISING_INTERVAL=500 node <your file>.js
+```
+
+Advertising intervals must be between 20 ms to 10 s (10,000 ms).
+
+## Useful tools/links
 
  * Tools
    * LightBlue for [iOS](https://itunes.apple.com/us/app/lightblue/id557428110)/[OS X](https://itunes.apple.com/us/app/lightblue/id639944780)
@@ -302,14 +372,14 @@ Useful tools/links
    * [hcitool](http://linux.die.net/man/1/hcitool) and ```gatttool``` by [BlueZ](http://www.bluez.org) for Linux
 
 
+## License
 
-License
-========
-
-Copyright (C) 2013 Sandeep Mistry <sandeep.mistry@gmail.com>
+Copyright (C) 2015 Sandeep Mistry <sandeep.mistry@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[![Analytics](https://ga-beacon.appspot.com/UA-56089547-1/sandeepmistry/bleno?pixel)](https://github.com/igrigorik/ga-beacon)

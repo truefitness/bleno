@@ -2,14 +2,20 @@
 
 var debug = require('debug')('bindings');
 
+var child_process = require('child_process');
 var events = require('events');
 var os = require('os');
 var util = require('util');
 
 var XpcConnection = require('xpc-connection');
 
+var uuidToAddress = require('./uuid-to-address');
+
+var osRelease = parseFloat(os.release());
+
 var BlenoBindings = function() {
   this._xpcConnection = new XpcConnection('com.apple.blued');
+  this._deviceUUID = null;
 
   this._xpcConnection.on('error', function(message) {
     this.emit('xpcError', message);
@@ -22,12 +28,12 @@ var BlenoBindings = function() {
 
 util.inherits(BlenoBindings, events.EventEmitter);
 
-BlenoBindings.prototype.setupXpcConnection = function() {
-  this._xpcConnection.setup();
-};
-
 BlenoBindings.prototype.sendXpcMessage = function(message) {
   this._xpcConnection.sendMessage(message);
+};
+
+BlenoBindings.prototype.disconnect = function() {
+  throw new Error('disconnect is not supported on OS X!');
 };
 
 var blenoBindings = new BlenoBindings();
@@ -54,25 +60,36 @@ blenoBindings.sendCBMsg = function(id, args) {
 };
 
 blenoBindings.init = function() {
-  this.timer = setTimeout(function(){}, 2147483647); // TODO: add worker in bindings instead
+  this._xpcConnection.setup();
 
-  var osRelease = parseFloat(os.release());
+  child_process.exec('system_profiler SPBluetoothDataType', {}, function(error, stdout, stderr) {
+    this.emit('platform', os.platform());
 
-  if (osRelease < 13) {
-    debug('bleno warning: OS X < 10.9 detected');
+    if (!error) {
+      var found = stdout.match(/\s+Address: (.*)/);
+      if (found) {
+        var address = found[1].toLowerCase().replace(/-/g, ':');
 
-    console.warn('bleno requires OS X 10.9 or higher!');
+        this.emit('addressChange', address);
+      }
+    }
 
-    this.emit('stateChange', 'unsupported');
-  } else {
-    this.sendCBMsg(1, {
-      kCBMsgArgName: 'node-' + (new Date()).getTime(),
-      kCBMsgArgOptions: {
-          kCBInitOptionShowPowerAlert: 1
-      },
-      kCBMsgArgType: 1
-    });
-  }
+    if (osRelease < 13) {
+      debug('bleno warning: OS X < 10.9 detected');
+
+      console.warn('bleno requires OS X 10.9 or higher!');
+
+      this.emit('stateChange', 'unsupported');
+    } else {
+      this.sendCBMsg(1, {
+        kCBMsgArgName: 'node-' + (new Date()).getTime(),
+        kCBMsgArgOptions: {
+            kCBInitOptionShowPowerAlert: 1
+        },
+        kCBMsgArgType: 1
+      });
+    }
+  }.bind(this));
 };
 
 blenoBindings.on('kCBMsgId6', function(args) {
@@ -97,8 +114,27 @@ blenoBindings.startAdvertising = function(name, serviceUuids) {
 };
 
 blenoBindings.startAdvertisingIBeacon = function(data) {
+  var args = {};
+
+  if (osRelease >= 14) {
+    args.kCBAdvDataAppleMfgData = Buffer.concat([
+      new Buffer([data.length + 5, 0xff, 0x4c, 0x00, 0x02, data.length]),
+      data
+    ]);
+  } else {
+    args.kCBAdvDataAppleBeaconKey = data;
+  }
+
+  this.sendCBMsg(8, args);
+};
+
+blenoBindings.startAdvertisingWithEIRData = function(advertisementData) {
+  if (osRelease < 14) {
+    throw new Error('startAdvertisingWithEIRData is only supported on OS X 10.10 and above!');
+  }
+
   this.sendCBMsg(8, {
-    kCBAdvDataAppleBeaconKey: data
+    kCBAdvDataAppleMfgData: advertisementData
   });
 };
 
@@ -128,6 +164,7 @@ blenoBindings.setServices = function(services) {
   var attributeId = 1;
 
   this._attributes = [];
+  this._setServicesError = undefined;
 
   if (services.length) {
     for (var i = 0; i < services.length; i++) {
@@ -200,7 +237,7 @@ blenoBindings.setServices = function(services) {
 
         var characteristicArg = {
           kCBMsgArgAttributeID: attributeId,
-          kCBMsgArgAttributePermissions: permissions, 
+          kCBMsgArgAttributePermissions: permissions,
           kCBMsgArgCharacteristicProperties: properties,
           kCBMsgArgData: characteristic.value,
           kCBMsgArgDescriptors: [],
@@ -230,12 +267,46 @@ blenoBindings.setServices = function(services) {
   }
 };
 
+blenoBindings.updateRssi = function() {
+  if (this._deviceUUID === null) {
+    this.emit('rssiUpdate', 127); // not supported
+  } else {
+    this.sendCBMsg(44, {
+      kCBMsgArgDeviceUUID: this._deviceUUID
+    });
+  }
+};
+
 blenoBindings.on('kCBMsgId18', function(args) {
   var attributeId = args.kCBMsgArgAttributeID;
+  var result = args.kCBMsgArgResult;
+
+  if (result) {
+    var errorMessage = 'failed to set service ' + this._attributes[attributeId].uuid;
+
+    if (result === 27) {
+      errorMessage += ', UUID not allowed!';
+    }
+
+    this._setServicesError = new Error(errorMessage);
+  }
 
   if (attributeId === this._lastServiceAttributeId) {
-    this.emit('servicesSet');
+    this.emit('servicesSet',  this._setServicesError);
   }
+});
+
+blenoBindings.on('kCBMsgId53', function(args) {
+  var deviceUUID = args.kCBMsgArgDeviceUUID.toString('hex');
+  var mtu = args.kCBMsgArgATTMTU;
+
+  this._deviceUUID = new Buffer(deviceUUID, 'hex');
+  this._deviceUUID.isUuid = true;
+
+  uuidToAddress(deviceUUID, function(error, address) {
+    this.emit('accept', address);
+    this.emit('mtuChange', mtu);
+  }.bind(this));
 });
 
 blenoBindings.on('kCBMsgId19', function(args) {
@@ -311,12 +382,21 @@ blenoBindings.on('kCBMsgId22', function(args) {
 
 blenoBindings.on('kCBMsgId23', function(args) {
   var attributeId = args.kCBMsgArgAttributeID;
+  var attribute = this._attributes[attributeId];
 
-  this._attributes[attributeId].emit('notify');
+  if (attribute.properties.indexOf('notify') !== -1) {
+    attribute.emit('notify');
+  }
+
+  if (attribute.properties.indexOf('indicate') !== -1) {
+    attribute.emit('indicate');
+  }
 });
 
+blenoBindings.on('kCBMsgId55', function(args) {
+  var rssi = args.kCBMsgArgData;
 
-blenoBindings.setupXpcConnection();
-blenoBindings.init();
+  this.emit('rssiUpdate', rssi);
+});
 
 module.exports = blenoBindings;

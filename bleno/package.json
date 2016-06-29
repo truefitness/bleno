@@ -1,17 +1,17 @@
 {
   "name": "bleno",
-  "version": "0.1.5",
-  "description": "A node.js module for implementing BLE (Bluetooth low energy) peripherals",
+  "version": "0.4.0",
+  "description": "A Node.js module for implementing BLE (Bluetooth Low Energy) peripherals",
   "main": "index.js",
   "engines": {
     "node": ">=0.8"
   },
   "os": [
     "darwin",
-    "linux"
+    "linux",
+    "win32"
   ],
   "scripts": {
-    "install": "node install.js",
     "pretest": "jshint *.js lib/. test/. examples/.",
     "test": "mocha -R spec test/*.js"
   },
@@ -33,9 +33,14 @@
     "jshint": "~2.3.0",
     "should": "~2.0.2",
     "mocha": "~1.14.0",
-    "node-blink1": "~0.1.1"
+    "node-blink1": "~0.2.2"
   },
   "dependencies": {
-    "debug": "~0.7.2"
+    "debug": "^2.2.0"
+  },
+  "optionalDependencies": {
+    "bluetooth-hci-socket": "~0.4.3",
+    "bplist-parser": "0.0.6",
+    "xpc-connection": "~0.1.4"
   }
 }

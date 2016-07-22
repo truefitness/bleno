@@ -1,10 +1,10 @@
-bleno (4.0.0true1~5) UNRELEASED; urgency=medium
+bleno (4.0.0true1) candor; urgency=medium
 
   * Imported Upstream version 0.4.0
   * Remove unneeded build steps
   * Remove unneeded postinst
 
- -- Robert Hedges <rhedges@truefitness.com>  Tue, 28 Jun 2016 21:01:47 -0500
+ -- Robert Hedges <rhedges@truefitness.com>  Fri, 22 Jul 2016 19:02:47 +0000
 
 bleno (0.1.5-1true3~4.gbp00584e) clever-testing; urgency=low
 

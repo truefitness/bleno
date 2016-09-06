@@ -1,0 +1,446 @@
+From: Mike Nolan <mpnolan@truefitness.com>
+Date: Tue, 6 Sep 2016 14:29:36 -0500
+Subject: Start on script to advertise workout data continuously
+
+This currently includes treadmill data only
+---
+ bleno/trueScripts/advertiseRunfit.js | 430 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 430 insertions(+)
+ create mode 100644 bleno/trueScripts/advertiseRunfit.js
+
+diff --git a/bleno/trueScripts/advertiseRunfit.js b/bleno/trueScripts/advertiseRunfit.js
+new file mode 100644
+index 0000000..6132be6
+--- /dev/null
++++ b/bleno/trueScripts/advertiseRunfit.js
+@@ -0,0 +1,430 @@
++
++var util = require('util');
++var bleno = require('../index');
++var os = require('os');
++var net = require('net');
++
++var BlenoPrimaryService = bleno.PrimaryService;
++var BlenoCharacteristic = bleno.Characteristic;
++var BlenoDescriptor = bleno.Descriptor;
++
++var hardware= {serialNumber:"1234", type:"treadmill"};
++var DeviceInformationService = require('./blenoDeviceInformationService');
++var deviceInformationService = new DeviceInformationService(hardware.serialNumber);
++
++bleno.on('stateChange', function(state) {
++  console.log('on -> stateChange: ' + state);
++  if (state === 'poweredOn') {
++    var callback = null;
++    var options = {"completeLocalName": true, "completeUUIDList": true, "mfgData": [0x01, 0xcd]};
++    bleno.startAdvertising(os.hostname(), ["a026ee07-0a7d-4ab3-97fa-f1500f9feb8b"], callback, options);
++
++  } else {
++    bleno.stopAdvertising();
++  }
++});
++
++var FITNESS_EQUIPMENT_TYPE_UNKNOWN = 0;
++var FITNESS_EQUIPMENT_TYPE_TREADMILL = 1;
++var FITNESS_EQUIPMENT_TYPE_BIKE = 2;
++// ...
++
++var FitnessEquipmentTypeCharacteristic = function() {
++  bleno.Characteristic.call(this, {
++    value: new Buffer([FITNESS_EQUIPMENT_TYPE_TREADMILL]),
++    uuid: "a026e01f-0a7d-4ab3-97fa-f1500f9feb8b",
++    properties: ['notify', 'read']
++  });
++  this._updateValueCallback = null;
++};
++util.inherits(FitnessEquipmentTypeCharacteristic, bleno.Characteristic);
++
++FitnessEquipmentTypeCharacteristic.prototype.onSubscribe = function(maxValueSize, updateValueCallback) {
++  console.log("FitnessEquipmentTypeCharacteristic - onSubscribe");
++
++  this._updateValueCallback = updateValueCallback;
++};
++
++FitnessEquipmentTypeCharacteristic.prototype.setValue = function(maxValueSize, updateValueCallback) {
++};
++
++FitnessEquipmentTypeCharacteristic.prototype.onUnsubscribe = function() {
++  console.log("FitnessEquipmentTypeCharacteristic - onUnsubscribe");
++
++  this._updateValueCallback = null;
++};
++
++/**
++ * FitnessEquipmentStateCharacteristic
++ * The Fitness Equipment State Characteristic exposes what the current
++ * operating state of the fitness equipment device.
++ */
++
++var FITNESS_EQUIPMENT_STATE_UNKNOWN = 0;
++var FITNESS_EQUIPMENT_STATE_IDLE = 1;
++var FITNESS_EQUIPMENT_STATE_PAUSED = 2;
++var FITNESS_EQUIPMENT_STATE_IN_USE = 10;
++var FITNESS_EQUIPMENT_STATE_IN_USE_WARMING_UP = 11;
++var FITNESS_EQUIPMENT_STATE_IN_USE_LOW_INTENSITY = 12;
++var FITNESS_EQUIPMENT_STATE_IN_USE_HIGH_INTENSITY = 13;
++var FITNESS_EQUIPMENT_STATE_IN_USE_RECOVERY = 14;
++var FITNESS_EQUIPMENT_STATE_FINISHED = 128;
++
++var FitnessEquipmentStateCharacteristic = function() {
++  bleno.Characteristic.call(this, {
++    value: new Buffer([0]),
++    uuid: "a026e01e-0a7d-4ab3-97fa-f1500f9feb8b",
++    properties: ['notify', 'read']
++  });
++  this._updateValueCallback = null;
++};
++
++util.inherits(FitnessEquipmentStateCharacteristic, bleno.Characteristic);
++
++FitnessEquipmentStateCharacteristic.prototype.mapWorkoutStatusToState = function(data) {
++  if (data.paused) {
++    return FITNESS_EQUIPMENT_STATE_PAUSED;
++  }
++
++  if (data.status === 0) { // No Mode
++    return FITNESS_EQUIPMENT_STATE_IDLE;
++  } else if (data.status === 4) { // Summary Mode
++    return FITNESS_EQUIPMENT_STATE_FINISHED;
++  } else if (data.status === 2) { // Cool Down Mode
++    return FITNESS_EQUIPMENT_STATE_IN_USE_RECOVERY;
++  }
++
++  // For anything else, simply say "in use"
++  return FITNESS_EQUIPMENT_STATE_IN_USE;
++};
++
++FitnessEquipmentStateCharacteristic.prototype.onSubscribe = function(maxValueSize, updateValueCallback) {
++  console.log("FitnessEquipmentStateCharacteristic - onSubscribe");
++
++  this._updateValueCallback = updateValueCallback;
++};
++
++/**
++ * FitnessEquipmentMeasurementCharacteristic
++ * 
++ * 
++ */
++var FitnessEquipmentMeasurementCharacteristic = function() {
++  bleno.Characteristic.call(this, {
++    value: new Buffer([]),
++    uuid: "a026e01d-0a7d-4ab3-97fa-f1500f9feb8b",
++    properties: ['notify', 'read']
++  });
++  this._updateValueCallback = null;
++};
++
++util.inherits(FitnessEquipmentMeasurementCharacteristic, bleno.Characteristic);
++
++/**
++ * FitnessEquipmentWorkoutProgramNameCharacteristic
++ *
++ *
++ */
++var FitnessEquipmentWorkoutProgramNameCharacteristic = function() {
++  bleno.Characteristic.call(this, {
++    value: new Buffer("Quick Start"),
++    uuid: "a026e01b-0a7d-4ab3-97fa-f1500f9feb8b",
++    properties: ['notify', 'read']
++  });
++  this._updateValueCallback = null;
++};
++
++util.inherits(FitnessEquipmentWorkoutProgramNameCharacteristic, bleno.Characteristic);
++
++//TODO
++//FitnessEquipmentStateNameCharacteristic
++//FitnessEquipmentSensorMeasurementInputCharacteristic - This is a write-without-response characteristic for sending data from mobile
++//                                                       app to the console. May not be used.
++
++// Initialize characteristics
++var fitnessEquipmentTypeCharacteristic = new FitnessEquipmentTypeCharacteristic();
++var fitnessEquipmentStateCharacteristic = new FitnessEquipmentStateCharacteristic();
++var fitnessEquipmentMeasurementCharacteristic = new FitnessEquipmentMeasurementCharacteristic();
++var fitnessEquipmentWorkoutProgramNameCharacteristic = new FitnessEquipmentWorkoutProgramNameCharacteristic();
++
++//server.listen("/tmp/workoutdata.sock");
++
++process.stdin.on("data", function(chunk) {
++  try {
++    var data = JSON.parse(chunk);
++  } catch (e) {
++    // JSON parsing failed
++    console.log("!! Invalid input");
++    console.log(e.message);
++    return
++  }
++
++  var response = serializeDataForTreadmill(data);
++  // Update program name
++  if (data.program) {
++    if (fitnessEquipmentWorkoutProgramNameCharacteristic.updateValueCallback) {
++      fitnessEquipmentWorkoutProgramNameCharacteristic.updateValueCallback(data.program);
++    }
++  }
++
++  if (fitnessEquipmentMeasurementCharacteristic.updateValueCallback) {
++    for (var i = 0; i < response.length; i++) {
++      fitnessEquipmentMeasurementCharacteristic.updateValueCallback(response[i]);
++    }
++  }
++
++  if (fitnessEquipmentStateCharacteristic._updateValueCallback) {
++    var stateCode = fitnessEquipmentStateCharacteristic.mapWorkoutStatusToState(data);
++    fitnessEquipmentStateCharacteristic._updateValueCallback(new Buffer([stateCode]));
++  }
++  //console.log("stdin", chunk.toString());
++});
++
++process.on("exit", function() {
++});
++
++function toUint16(num) {
++  return [(num & 0xff00) >> 8, num & 0x00ff];
++}
++function toUint24(num) {
++  return [(num & 0xff0000) >> 16, (num & 0x00ff00) >> 8, num & 0x0000ff];
++}
++function toSint16(num) {
++  // To be implemented once format is determined
++  return toUint16(num);
++}
++/**
++ * Serialize data as bitfield
++ * Return: Array of Buffer objects containing data to advertise
++ */
++function serializeDataForTreadmill(data) {
++  var data1 = [];
++  var data2 = [];
++  var n = 0;
++  // Always include Flags 1 and 2
++  n |= 0x01;
++  n |= 0x02;
++  // This is the first packet in the sequence
++  n |= 0x10;
++
++  // Include Elapsed Workout Time
++  if (data.time !== undefined) {
++    n |= 0x40;
++  }
++  // Include Remaining Workout Time
++  if (data.timeRemaining !== undefined) {
++    n |= 0x80;
++  }
++  data1.push(n);
++
++  // Flag 1
++  n = 0;
++  // Include Cumulative Vertical Distance
++  if (data.verticalDistance !== undefined) {
++    n |= 0x80;
++  }
++  // Include Cumulative Horizontal Distance
++  if (data.distance !== undefined) {
++    n |= 0x40;
++  }
++  // Include Speed
++  if (data.speed !== undefined) {
++    n |= 0x08;
++  }
++  // Include Heartrate
++  if (data.heartrate !== undefined) {
++    n |= 0x01;
++  }
++  data1.push(n);
++
++  // Flag 2
++  n = 0;
++  // Include Grade
++  if (data.incline !== undefined) {
++    // We do this in the second packet
++  }
++  // Include METs
++  if (data.mets !== undefined) {
++    // We do this in the second packet
++  }
++  // Include Energy Rate (calories/hr)
++  if (data.calsPerHour !== undefined) {
++    // We do this in the second packet
++  }
++  // Include Cumulative Energy (total calories)
++  if (data.calories !== undefined) {
++    n |= 0x02;
++  }
++  // Include Vertical Distance Negative
++  if (data.verticalDistance !== undefined) {
++    n |= 0x01;
++  }
++  data1.push(n);
++
++  
++  // -- Start appending actual data
++  var octets = []
++  // Elapsed Workout Time
++  if (data.time !== undefined) {
++    octets = toUint16(parseInt(data.time, 10));
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++  }
++  // Remaining Workout Time
++  if (data.timeRemaining !== undefined) {
++    octets = toUint16(parseInt(data.timeRemaining, 10));
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++  }
++  // Heartrate
++  if (data.heartrate !== undefined) { // 1 byte
++    data1.push(parseInt(data.heartrate, 10) & 0x00ff);
++  }
++  // Speed
++  if (data.speed !== undefined) {
++    octets = toUint16(parseInt(data.speed, 10));
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++  }
++  // Cumulative Horizontal Distance
++  if (data.distance !== undefined) { // 3 bytes
++    octets = toUint24(parseInt(data.distance, 10));
++    data1.push(octets[2]);
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++  }
++  // Cumulative Vertical Distance (positive and negative)
++  if (data.verticalDistance !== undefined) {
++    var verticalDistance = parseInt(data.verticalDistance, 10);
++
++    // Positive Vertical Distance
++    octets = toUint16(verticalDistance);
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++    // Negative Vertical distance
++    octets = toUint16(-verticalDistance);
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++  }
++  // Cumulative Energy (total calories)
++  if (data.calories !== undefined) {
++    octets = toUint16(parseInt(data.calories, 10));
++    data1.push(octets[1]);
++    data1.push(octets[0]);
++  }
++
++  // Start constructing second packet
++  // NOTE: Energy Rate, METs, and Grade are part of the second packet
++  // in order to account for the 20-byte limit on packets
++  n = 0;
++  // Flag 0
++  // This is the final update packet
++  n |= 0x20;
++  // Include Flags 2 (and that's all - skip Flag 1)
++  n |= 0x02;
++  data2.push(n);
++  // Flag 2
++  n = 0;
++  if (data.incline !== undefined) {
++    n |= 0x80; // Include Grade
++  }
++  if (data.mets !== undefined) { // 1 byte
++    n |= 0x08; // Include METs
++  }
++  if (data.calsPerHour !== undefined) {
++    n |= 0x04; // Include Cals/Hr (Energy Rate)
++  }
++  data2.push(n);
++  
++  // Energy Rate (calories/hr)
++  if (data.calsPerHour !== undefined) {
++    octets = toUint16(parseInt(data.calsPerHour, 10));
++    data2.push(octets[1]);
++    data2.push(octets[0]);
++  }
++  // METs
++  if (data.mets !== undefined) { // 1 byte
++    data2.push(parseInt(data.mets, 10) & 0x00ff);
++  }
++  // Grade
++  if (data.incline !== undefined) {
++    octets = toSint16(parseInt(data.incline, 10));
++    data2.push(octets[1]);
++    data2.push(octets[0]);
++  }
++
++  return [new Buffer(data1), new Buffer(data2)];
++}
++
++bleno.on('advertisingStart', function(error) {
++  console.log('on -> advertisingStart: ' + (error ? 'error ' + error : 'success'));
++
++  if (!error) {
++
++      bleno.setServices([
++
++          // Device Information Service
++          new bleno.PrimaryService({
++            uuid: "180a",
++            characteristics: [
++              // Manufacturer String
++              new bleno.Characteristic({
++                value: "TRUE",
++                uuid: '2a29',
++                properties: ['read']
++              }),
++              // Firmware Revision
++              new bleno.Characteristic({
++                value: "0.0",
++                uuid: '2a26',
++                properties: ['read']
++              }),
++            ]
++            }),
++
++            // Fitness Equipment Profile
++            new bleno.PrimaryService({
++              uuid: "a026ee07-0a7d-4ab3-97fa-f1500f9feb8b",
++              characteristics: [
++                fitnessEquipmentTypeCharacteristic,
++                fitnessEquipmentStateCharacteristic,
++                fitnessEquipmentMeasurementCharacteristic,
++                fitnessEquipmentWorkoutProgramNameCharacteristic 
++              ]
++              }),
++
++              // Gem Module Firmware Update Service
++              new bleno.PrimaryService({
++                uuid: "a026ee01-0a7d-4ab3-97fa-f1500f9feb8b",
++                characteristics: [
++                  /*new bleno.Characteristic({
++                    value: new Buffer(1),
++                    uuid: "a026e01e-0a7d-4ab3-97fa-f1500f9feb8b",
++                    properties: ['notify', 'read']
++                  })*/
++                ]
++                }),
++
++              // ???
++              new bleno.PrimaryService({
++                uuid: "a026ee03-0a7d-4ab3-97fa-f1500f9feb8b",
++                characteristics: [
++                  /*new bleno.Characteristic({
++                    value: new Buffer(1),
++                    uuid: "a026e01e-0a7d-4ab3-97fa-f1500f9feb8b",
++                    properties: ['notify', 'read']
++                  })*/
++                ]
++                })
++        ]);
++  }
++});
++
++bleno.on('advertisingStop', function() {
++  console.log('on -> advertisingStop');
++});
++
++bleno.on('servicesSet', function() {
++  console.log('on -> servicesSet');
++});
++

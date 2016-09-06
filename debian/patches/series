@@ -8,3 +8,6 @@
 0008-Fixed-typo.patch
 0009-Remove-a-test-file-that-should-not-have-been-commite.patch
 0010-Modify-User-Data-Service-to-use-Bluetooth-Sig-UUIDs.patch
+0011-Changes-to-support-RunFit-app-Not-integrated-cleanly.patch
+0012-Rework-changes-required-for-RunFit-app-to-be-integra.patch
+0013-Start-on-script-to-advertise-workout-data-continuous.patch

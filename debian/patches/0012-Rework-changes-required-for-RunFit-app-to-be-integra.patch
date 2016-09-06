@@ -1,0 +1,135 @@
+From: Mike Nolan <mpnolan@truefitness.com>
+Date: Wed, 31 Aug 2016 14:42:42 -0500
+Subject: Rework changes required for RunFit app to be integrated properly
+
+---
+ bleno/lib/bleno.js               |  4 ++--
+ bleno/lib/hci-socket/bindings.js |  4 ++--
+ bleno/lib/hci-socket/gap.js      | 47 +++++++++++++++++++++++++++-------------
+ 3 files changed, 36 insertions(+), 19 deletions(-)
+
+diff --git a/bleno/lib/bleno.js b/bleno/lib/bleno.js
+index 0d4f755..2153af4 100644
+--- a/bleno/lib/bleno.js
++++ b/bleno/lib/bleno.js
+@@ -90,7 +90,7 @@ Bleno.prototype.onDisconnect = function(clientAddress) {
+   this.emit('disconnect', clientAddress);
+ };
+ 
+-Bleno.prototype.startAdvertising = function(name, serviceUuids, callback) {
++Bleno.prototype.startAdvertising = function(name, serviceUuids, callback, options) {
+   if (this.state !== 'poweredOn') {
+     var error = new Error('Could not start advertising, state is ' + this.state + ' (not poweredOn)');
+ 
+@@ -112,7 +112,7 @@ Bleno.prototype.startAdvertising = function(name, serviceUuids, callback) {
+       }
+     }
+ 
+-    this._bindings.startAdvertising(name, undashedServiceUuids);
++    this._bindings.startAdvertising(name, undashedServiceUuids, options);
+   }
+ };
+ 
+diff --git a/bleno/lib/hci-socket/bindings.js b/bleno/lib/hci-socket/bindings.js
+index a346ab3..ec27e23 100644
+--- a/bleno/lib/hci-socket/bindings.js
++++ b/bleno/lib/hci-socket/bindings.js
+@@ -25,10 +25,10 @@ var BlenoBindings = function() {
+ 
+ util.inherits(BlenoBindings, events.EventEmitter);
+ 
+-BlenoBindings.prototype.startAdvertising = function(name, serviceUuids) {
++BlenoBindings.prototype.startAdvertising = function(name, serviceUuids, options) {
+   this._advertising = true;
+ 
+-  this._gap.startAdvertising(name, serviceUuids);
++  this._gap.startAdvertising(name, serviceUuids, options);
+ };
+ 
+ BlenoBindings.prototype.startAdvertisingIBeacon = function(data) {
+diff --git a/bleno/lib/hci-socket/gap.js b/bleno/lib/hci-socket/gap.js
+index 03a2763..cf91e0f 100644
+--- a/bleno/lib/hci-socket/gap.js
++++ b/bleno/lib/hci-socket/gap.js
+@@ -25,9 +25,20 @@ function Gap(hci) {
+ 
+ util.inherits(Gap, events.EventEmitter);
+ 
+-Gap.prototype.startAdvertising = function(name, serviceUuids) {
++Gap.prototype.startAdvertising = function(name, serviceUuids, options) {
+   debug('startAdvertising: name = ' + name + ', serviceUuids = ' + JSON.stringify(serviceUuids, null, 2));
+ 
++  /**
++   * Custom options for True Fitness
++   *
++   * completeLocalName (bool) - Set to true to use Complete Local Name characteristic
++   * mfgData (array) - An array of two bytes representing Company ID: e.g. [0xff, 0xff]
++   * completeUUIDList (bool) - Set to true to use Complete List of UUIDs characteristic
++   */
++  if (!options) {
++    options = {};
++  }
++
+   var advertisementDataLength = 3;
+   var scanDataLength = 0;
+ 
+@@ -38,8 +49,11 @@ Gap.prototype.startAdvertising = function(name, serviceUuids) {
+   if (name && name.length) {
+     scanDataLength += 2 + name.length;
+   }
+-  // mpn: Add mfg data length to size
+-  scanDataLength += 1 + 1 + 3; // length + packet type + data
++
++  // True Fitness: Optional mfgData parameter
++  if (options.mfgData) {
++    scanDataLength += 1 + 1 + 3; // length + packet type + data
++  }
+ 
+   if (serviceUuids && serviceUuids.length) {
+     for (i = 0; i < serviceUuids.length; i++) {
+@@ -88,8 +102,10 @@ Gap.prototype.startAdvertising = function(name, serviceUuids) {
+     advertisementData.writeUInt8(1 + 16 * serviceUuids128bit.length, advertisementDataOffset);
+     advertisementDataOffset++;
+ 
+-    //advertisementData.writeUInt8(0x06, advertisementDataOffset);
+-    advertisementData.writeUInt8(0x07, advertisementDataOffset); // mpn: Changed to 0x07 for Complete List of UUIDs
++    // True Fitness: Optional completeUUIDList parameter
++    // If completeUUIDList is passed, then use 0x07 identifier "Complete List
++    // of UUIDs" rather than 0x06 - "Incomplete List of UUIDs"
++    advertisementData.writeUInt8(options.completeUUIDList ? 0x07 : 0x06, advertisementDataOffset); // mpn: Changed to 0x07 for Complete List of UUIDs
+     advertisementDataOffset++;
+ 
+     for (i = 0; i < serviceUuids128bit.length; i++) {
+@@ -105,21 +121,22 @@ Gap.prototype.startAdvertising = function(name, serviceUuids) {
+ 
+     scanData.writeUInt8(1 + nameBuffer.length, scanDataOffset);
+     scanDataOffset++;
+-    //scanData.writeUInt8(0x08, 1);
+-    scanData.writeUInt8(0x09, scanDataOffset); // mpn: Changed to 0x09 for Complete Local Name
++    scanData.writeUInt8(options.completeLocalName ? 0x09 : 0x08, scanDataOffset); // mpn: Changed to 0x09 for Complete Local Name
+     scanDataOffset++;
+     nameBuffer.copy(scanData, scanDataOffset);
+     scanDataOffset += nameBuffer.length;
+   }
+ 
+-  // mpn: Add Manufacturer Data - This seems to be essential to being noticed
+-  // by the RunFit app. However, the actual MFG ID doesn't seem to matter
+-  var mfData = new Buffer([0xcd, 0x01, 0x00]);
+-  scanData.writeUInt8(1 + mfData.length, scanDataOffset);
+-  scanDataOffset++;
+-  scanData.writeUInt8(0xff, scanDataOffset);
+-  scanDataOffset++;
+-  mfData.copy(scanData, scanDataOffset);
++  // TF: Add Manufacturer Data - This seems to be essential to being noticed
++  // by the RunFit app. However, the actual MFG ID used doesn't seem to matter
++  if (options.mfgData) {
++    var mfData = new Buffer([options.mfgData[1], options.mfgData[0], 0x00]);
++    scanData.writeUInt8(1 + mfData.length, scanDataOffset);
++    scanDataOffset++;
++    scanData.writeUInt8(0xff, scanDataOffset);
++    scanDataOffset++;
++    mfData.copy(scanData, scanDataOffset);
++  }
+ 
+   this.startAdvertisingWithEIRData(advertisementData, scanData);
+ };

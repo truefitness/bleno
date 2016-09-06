@@ -1,3 +1,9 @@
+bleno (4.0.0true1~6) UNRELEASED; urgency=medium
+
+  * Start on changes to advertise workout data for RunFit app
+
+ -- Mike Nolan <mpnolan@truefitness.com>  Tue, 06 Sep 2016 16:10:00 -0500
+
 bleno (4.0.0true1~5) UNRELEASED; urgency=medium
 
   * Imported Upstream version 0.4.0

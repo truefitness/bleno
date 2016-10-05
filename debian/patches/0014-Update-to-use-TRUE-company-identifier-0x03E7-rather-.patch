@@ -1,0 +1,22 @@
+From: Mike Nolan <mpnolan@truefitness.com>
+Date: Wed, 5 Oct 2016 14:25:39 -0500
+Subject: Update to use TRUE company identifier 0x03E7 rather than placeholder
+
+https://www.bluetooth.com/specifications/assigned-numbers/company-Identifiers
+---
+ bleno/trueScripts/advertiseRunfit.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bleno/trueScripts/advertiseRunfit.js b/bleno/trueScripts/advertiseRunfit.js
+index 6132be6..d90909e 100644
+--- a/bleno/trueScripts/advertiseRunfit.js
++++ b/bleno/trueScripts/advertiseRunfit.js
+@@ -16,7 +16,7 @@ bleno.on('stateChange', function(state) {
+   console.log('on -> stateChange: ' + state);
+   if (state === 'poweredOn') {
+     var callback = null;
+-    var options = {"completeLocalName": true, "completeUUIDList": true, "mfgData": [0x01, 0xcd]};
++    var options = {"completeLocalName": true, "completeUUIDList": true, "mfgData": [0x03, 0xE7]};
+     bleno.startAdvertising(os.hostname(), ["a026ee07-0a7d-4ab3-97fa-f1500f9feb8b"], callback, options);
+ 
+   } else {

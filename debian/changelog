@@ -1,3 +1,9 @@
+bleno (4.0.0true1~8) UNRELEASED; urgency=medium
+
+  * Improvements to RunFit app support. Fix iOS app not working.
+
+ -- Mike Nolan <mpnolan@truefitness.com>  Wed, 07 Oct 2016 12:25:00 -0500
+
 bleno (4.0.0true1~7) UNRELEASED; urgency=medium
 
   * Update to use TRUE company identifier rather than placeholder

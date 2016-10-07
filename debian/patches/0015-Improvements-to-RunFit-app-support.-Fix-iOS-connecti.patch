@@ -1,0 +1,209 @@
+From: Mike Nolan <mpnolan@truefitness.com>
+Date: Fri, 7 Oct 2016 12:21:05 -0500
+Subject: Improvements to RunFit app support. Fix iOS connection issue.
+
+Pass further data to match output of GEM module and latest spec. Fixes the following:
+ * Inability to connect / start workout on iOS app, tested with iPod Touch
+ * Android app stays stuck at "Connecting" on Get Ready screen (minor, since app would nonetheless go to workout screen, once console started workout)
+---
+ bleno/lib/hci-socket/gap.js          | 28 +++++++++++++-
+ bleno/trueScripts/advertiseRunfit.js | 71 ++++++++++++++++++++++++++++++++----
+ 2 files changed, 91 insertions(+), 8 deletions(-)
+
+diff --git a/bleno/lib/hci-socket/gap.js b/bleno/lib/hci-socket/gap.js
+index cf91e0f..18aa769 100644
+--- a/bleno/lib/hci-socket/gap.js
++++ b/bleno/lib/hci-socket/gap.js
+@@ -34,6 +34,8 @@ Gap.prototype.startAdvertising = function(name, serviceUuids, options) {
+    * completeLocalName (bool) - Set to true to use Complete Local Name characteristic
+    * mfgData (array) - An array of two bytes representing Company ID: e.g. [0xff, 0xff]
+    * completeUUIDList (bool) - Set to true to use Complete List of UUIDs characteristic
++   * txPowerLevel (uint8)
++   * equipmentType (uint8) - Fitness Equipment Type
+    */
+   if (!options) {
+     options = {};
+@@ -53,6 +55,10 @@ Gap.prototype.startAdvertising = function(name, serviceUuids, options) {
+   // True Fitness: Optional mfgData parameter
+   if (options.mfgData) {
+     scanDataLength += 1 + 1 + 3; // length + packet type + data
++    scanDataLength += 2; // mpn: Add 2 more bytes of data: Equipment Type and Capabilities
++  }
++  if (options.txPowerLevel) {
++    scanDataLength += 1 + 1 + 3; // mpn: Add more bytes for Tx Power Level
+   }
+ 
+   if (serviceUuids && serviceUuids.length) {
+@@ -127,10 +133,29 @@ Gap.prototype.startAdvertising = function(name, serviceUuids, options) {
+     scanDataOffset += nameBuffer.length;
+   }
+ 
++  // TF: iOS asks that TX power level be included in advertisement
++  // See document "Bluetooth Accessory Design Guidelines for Apple Products"
++  if (options.txPowerLevel) {
++    // mpn: Add Tx Power Level
++    scanData.writeUInt8(1 + 1, scanDataOffset);
++    scanDataOffset++;
++    // 0x0a is identifier - from Assigned Numbers document - Generic Access Profile 
++    scanData.writeUInt8(0x0a, scanDataOffset);
++    scanDataOffset++;
++    scanData.writeUInt8(options.txPowerLevel, scanDataOffset);
++    scanDataOffset++;
++  }
++
+   // TF: Add Manufacturer Data - This seems to be essential to being noticed
+   // by the RunFit app. However, the actual MFG ID used doesn't seem to matter
+   if (options.mfgData) {
+-    var mfData = new Buffer([options.mfgData[1], options.mfgData[0], 0x00]);
++    // The bitmapped value 0x06 specifies the following:
++    //  * Does NOT "Has Static QR Code Advertising ID" (bit 0)
++    //  * Does "Reports Solicited Advertising Status" (bit 1)
++    //  * "Solicited Advertising Status" is set (bit 2)
++    var capabilities = 0x06;
++    var equipmentType = options.fitnessEquipmentType !== undefined ? options.fitnessEquipmentType : 1;
++    var mfData = new Buffer([options.mfgData[1], options.mfgData[0], equipmentType, capabilities]);
+     scanData.writeUInt8(1 + mfData.length, scanDataOffset);
+     scanDataOffset++;
+     scanData.writeUInt8(0xff, scanDataOffset);
+@@ -138,6 +163,7 @@ Gap.prototype.startAdvertising = function(name, serviceUuids, options) {
+     mfData.copy(scanData, scanDataOffset);
+   }
+ 
++  console.log("scanDataLength=", scanDataLength, "advertisementDataLength=", advertisementDataLength);
+   this.startAdvertisingWithEIRData(advertisementData, scanData);
+ };
+ 
+diff --git a/bleno/trueScripts/advertiseRunfit.js b/bleno/trueScripts/advertiseRunfit.js
+index d90909e..b04b7b9 100644
+--- a/bleno/trueScripts/advertiseRunfit.js
++++ b/bleno/trueScripts/advertiseRunfit.js
+@@ -16,19 +16,69 @@ bleno.on('stateChange', function(state) {
+   console.log('on -> stateChange: ' + state);
+   if (state === 'poweredOn') {
+     var callback = null;
+-    var options = {"completeLocalName": true, "completeUUIDList": true, "mfgData": [0x03, 0xE7]};
+-    bleno.startAdvertising(os.hostname(), ["a026ee07-0a7d-4ab3-97fa-f1500f9feb8b"], callback, options);
++    var options = {};
++    options.completeLocalName = true;
++    options.completeUUIDList = true;
++    options.mfgData = [0x03, 0xE7];
++    options.equipmentType = process.env.FITNESS_EQUIPMENT_TYPE || FITNESS_EQUIPMENT_TYPE_TREADMILL;
++    // mpn: Use an arbitrary value since the actual value is not known. iOS asks that this be included in the advertisement
++    options.txPowerLevel = 0x10;
++    // Use BLENO_DEVICE_NAME passed in by user. Bleno also uses this value for the Generic Access
++    // info, and we want to display the same name in the advertising packet.
++    var deviceName = process.env.BLENO_DEVICE_NAME || os.hostname();
++    bleno.startAdvertising(deviceName, ["a026ee07-0a7d-4ab3-97fa-f1500f9feb8b"], callback, options);
+ 
+   } else {
+     bleno.stopAdvertising();
+   }
+ });
+ 
++/**
++ * FitnessEquipmentMeasurementSummaryCharacteristic
++ */
++var FitnessEquipmentMeasurementSummaryCharacteristic = function() {
++  bleno.Characteristic.call(this, {
++    value: new Buffer([0]),
++    uuid: "a026e033-0a7d-4ab3-97fa-f1500f9feb8b",
++    properties: ['notify', 'read']
++  });
++  this._updateValueCallback = null;
++};
++util.inherits(FitnessEquipmentMeasurementSummaryCharacteristic, bleno.Characteristic);
++
++FitnessEquipmentMeasurementSummaryCharacteristic.prototype.onSubscribe = function(maxValueSize, updateValueCallback) {
++  console.log("FitnessEquipmentMeasurementSummaryCharacteristic - onSubscribe");
++
++  this._updateValueCallback = updateValueCallback;
++};
++
++/**
++ * FitnessEquipmentStateNameCharacteristic
++ */
++var FitnessEquipmentStateNameCharacteristic = function() {
++  bleno.Characteristic.call(this, {
++    value: new Buffer("active"),
++    uuid: "a026e020-0a7d-4ab3-97fa-f1500f9feb8b",
++    properties: ['notify', 'read']
++  });
++  this._updateValueCallback = null;
++};
++util.inherits(FitnessEquipmentStateNameCharacteristic, bleno.Characteristic);
++
++FitnessEquipmentStateNameCharacteristic.prototype.onSubscribe = function(maxValueSize, updateValueCallback) {
++  console.log("FitnessEquipmentStateNameCharacteristic - onSubscribe");
++
++  this._updateValueCallback = updateValueCallback;
++};
++
++
++/**
++ * FitnessEquipmentTypeCharacteristic 
++ */
+ var FITNESS_EQUIPMENT_TYPE_UNKNOWN = 0;
+ var FITNESS_EQUIPMENT_TYPE_TREADMILL = 1;
+ var FITNESS_EQUIPMENT_TYPE_BIKE = 2;
+ // ...
+-
+ var FitnessEquipmentTypeCharacteristic = function() {
+   bleno.Characteristic.call(this, {
+     value: new Buffer([FITNESS_EQUIPMENT_TYPE_TREADMILL]),
+@@ -72,7 +122,7 @@ var FITNESS_EQUIPMENT_STATE_FINISHED = 128;
+ 
+ var FitnessEquipmentStateCharacteristic = function() {
+   bleno.Characteristic.call(this, {
+-    value: new Buffer([0]),
++    value: new Buffer([FITNESS_EQUIPMENT_STATE_IDLE]),
+     uuid: "a026e01e-0a7d-4ab3-97fa-f1500f9feb8b",
+     properties: ['notify', 'read']
+   });
+@@ -142,6 +192,8 @@ util.inherits(FitnessEquipmentWorkoutProgramNameCharacteristic, bleno.Characteri
+ //                                                       app to the console. May not be used.
+ 
+ // Initialize characteristics
++var fitnessEquipmentStateNameCharacteristic = new FitnessEquipmentStateNameCharacteristic();
++var fitnessEquipmentMeasurementSummaryCharacteristic = new FitnessEquipmentMeasurementSummaryCharacteristic();
+ var fitnessEquipmentTypeCharacteristic = new FitnessEquipmentTypeCharacteristic();
+ var fitnessEquipmentStateCharacteristic = new FitnessEquipmentStateCharacteristic();
+ var fitnessEquipmentMeasurementCharacteristic = new FitnessEquipmentMeasurementCharacteristic();
+@@ -163,7 +215,7 @@ process.stdin.on("data", function(chunk) {
+   // Update program name
+   if (data.program) {
+     if (fitnessEquipmentWorkoutProgramNameCharacteristic.updateValueCallback) {
+-      fitnessEquipmentWorkoutProgramNameCharacteristic.updateValueCallback(data.program);
++      fitnessEquipmentWorkoutProgramNameCharacteristic.updateValueCallback(new Buffer(data.program));
+     }
+   }
+ 
+@@ -177,6 +229,9 @@ process.stdin.on("data", function(chunk) {
+     var stateCode = fitnessEquipmentStateCharacteristic.mapWorkoutStatusToState(data);
+     fitnessEquipmentStateCharacteristic._updateValueCallback(new Buffer([stateCode]));
+   }
++  if (fitnessEquipmentTypeCharacteristic._updateValueCallback) {
++    fitnessEquipmentTypeCharacteristic._updateValueCallback(new Buffer([FITNESS_EQUIPMENT_TYPE_TREADMILL]));
++  }
+   //console.log("stdin", chunk.toString());
+ });
+ 
+@@ -369,7 +424,7 @@ bleno.on('advertisingStart', function(error) {
+             characteristics: [
+               // Manufacturer String
+               new bleno.Characteristic({
+-                value: "TRUE",
++                value: "True Fitness",
+                 uuid: '2a29',
+                 properties: ['read']
+               }),
+@@ -389,7 +444,9 @@ bleno.on('advertisingStart', function(error) {
+                 fitnessEquipmentTypeCharacteristic,
+                 fitnessEquipmentStateCharacteristic,
+                 fitnessEquipmentMeasurementCharacteristic,
+-                fitnessEquipmentWorkoutProgramNameCharacteristic 
++                fitnessEquipmentWorkoutProgramNameCharacteristic,
++                fitnessEquipmentStateNameCharacteristic,
++                fitnessEquipmentMeasurementSummaryCharacteristic
+               ]
+               }),
+ 
